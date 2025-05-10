@@ -1,10 +1,10 @@
-# Gayale Transport Backend
+# Gayel Transport Backend
 
 Backend API pour la gestion du transport de gravier, développé avec Spring Boot et MongoDB.
 
 ## À propos du projet
 
-Le projet "Gayale Transport - Gestion de Transport de Gravier" est une application complète destinée à gérer les opérations logistiques d'une entreprise de transport de matériaux de construction, spécifiquement du gravier. Le backend permet le suivi des tickets de pesée, la gestion des projets et des bons de commande, ainsi que la génération de statistiques et rapports.
+Le projet "Gayel Transport - Gestion de Transport de Gravier" est une application complète destinée à gérer les opérations logistiques d'une entreprise de transport de matériaux de construction, spécifiquement du gravier. Le backend permet le suivi des tickets de pesée, la gestion des projets et des bons de commande, ainsi que la génération de statistiques et rapports.
 
 ## Technologies utilisées
 
@@ -186,7 +186,7 @@ Ce backend est conçu pour fonctionner avec une application frontend développé
 
 ## Licence
 
-Ce projet est sous licence propriétaire. © Gayale Transport.
+Ce projet est sous licence propriétaire. © Gayel Transport.
 
 ## Contact
 
