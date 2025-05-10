@@ -1,6 +1,8 @@
 package com.gayale.transport.controller;
 
 import com.gayale.transport.dto.ProjectDto;
+import com.gayale.transport.dto.ProjectWithPurchaseOrders;
+import com.gayale.transport.model.Project;
 import com.gayale.transport.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -77,5 +79,26 @@ public class ProjectController {
     public ResponseEntity<Boolean> deleteProject(@PathVariable String id) {
         boolean deleted = projectService.deleteProject(id);
         return ResponseEntity.ok(deleted);
+    }
+
+    @GetMapping("/client/{client}/purchase-orders")
+    @Operation(summary = "Get projects with purchase orders by client", description = "Returns a list of projects with purchase orders for a specific client")
+    public ResponseEntity<List<ProjectWithPurchaseOrders>> getProjectsWithPurchaseOrdersByClient(@PathVariable String client) {
+        List<ProjectWithPurchaseOrders> projects = projectService.getProjectsWithPurchaseOrdersByClient(client);
+        return ResponseEntity.ok(projects);
+    }
+
+    @GetMapping("/status/{status}/purchase-orders")
+    @Operation(summary = "Get projects with purchase orders by status", description = "Returns a list of projects with purchase orders by status")
+    public ResponseEntity<List<ProjectWithPurchaseOrders>> getProjectsWithPurchaseOrdersByStatus(@PathVariable Project.ProjectStatus status) {
+        List<ProjectWithPurchaseOrders> projects = projectService.getProjectsWithPurchaseOrdersByStatus(status);
+        return ResponseEntity.ok(projects);
+    }
+
+    @GetMapping("/purchase-orders")
+    @Operation(summary = "Get all projects with purchase orders", description = "Returns a list of all projects with purchase orders")
+    public ResponseEntity<List<ProjectWithPurchaseOrders>> getAllProjectsWithPurchaseOrders() {
+        List<ProjectWithPurchaseOrders> projects = projectService.getAllProjectsWithPurchaseOrders();
+        return ResponseEntity.ok(projects);
     }
 }

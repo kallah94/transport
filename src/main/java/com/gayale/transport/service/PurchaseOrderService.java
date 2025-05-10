@@ -2,6 +2,7 @@ package com.gayale.transport.service;
 
 import com.gayale.transport.dto.PurchaseOrderDto;
 import com.gayale.transport.exception.ResourceNotFoundException;
+import com.gayale.transport.model.Project;
 import com.gayale.transport.model.PurchaseOrder;
 import com.gayale.transport.repository.PurchaseOrderRepository;
 import com.gayale.transport.repository.ProjectRepository;

@@ -1,6 +1,8 @@
 package com.gayale.transport.service;
 
 import com.gayale.transport.dto.ProjectDto;
+import com.gayale.transport.dto.ProjectWithPurchaseOrders;
+import com.gayale.transport.dto.PurchaseOrderDto;
 import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.model.Project;
 import com.gayale.transport.repository.ProjectRepository;
@@ -14,10 +16,12 @@ import java.util.stream.Collectors;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final PurchaseOrderService purchaseOrderService;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(ProjectRepository projectRepository, PurchaseOrderService purchaseOrderService) {
         this.projectRepository = projectRepository;
+        this.purchaseOrderService = purchaseOrderService;
     }
 
     public List<ProjectDto> getAllProjects() {
@@ -25,6 +29,33 @@ public class ProjectService {
                                 .map(this::mapProjectToDto)
                                 .collect(Collectors.toList());
     }
+
+    public List<ProjectWithPurchaseOrders> getAllProjectsWithPurchaseOrders() {
+      return projectRepository.findAll().stream()
+                                .map(project -> {
+                                    List<PurchaseOrderDto> purchaseOrders = purchaseOrderService.getPurchaseOrdersByProject(project.getId());
+                                    return mapProjectWithPurchaseOrdersToDto(project, purchaseOrders);
+                                })
+                                .collect(Collectors.toList());
+    }
+    public List<ProjectWithPurchaseOrders> getProjectsWithPurchaseOrdersByClient(String client) {
+        return projectRepository.findByClient(client).stream()
+                                .map(project -> {
+                                    List<PurchaseOrderDto> purchaseOrders = purchaseOrderService.getPurchaseOrdersByProject(project.getId());
+                                    return mapProjectWithPurchaseOrdersToDto(project, purchaseOrders);
+                                })
+                                .collect(Collectors.toList());
+    }
+
+    public List<ProjectWithPurchaseOrders> getProjectsWithPurchaseOrdersByStatus(Project.ProjectStatus status) {
+        return projectRepository.findByStatus(status).stream()
+                                .map(project -> {
+                                    List<PurchaseOrderDto> purchaseOrders = purchaseOrderService.getPurchaseOrdersByProject(project.getId());
+                                    return mapProjectWithPurchaseOrdersToDto(project, purchaseOrders);
+                                })
+                                .collect(Collectors.toList());
+    }
+
 
     public ProjectDto getProjectById(String id) {
         Project project = projectRepository.findById(id)
@@ -106,5 +137,21 @@ public class ProjectService {
                          .createdAt(project.getCreatedAt())
                          .updatedAt(project.getUpdatedAt())
                          .build();
+    }
+
+    private ProjectWithPurchaseOrders mapProjectWithPurchaseOrdersToDto(Project project, List<PurchaseOrderDto> purchaseOrders) {
+        return ProjectWithPurchaseOrders.builder()
+                                        .id(project.getId())
+                                        .name(project.getName())
+                                        .client(project.getClient())
+                                        .destination(project.getDestination())
+                                        .purchaseOrders(purchaseOrders)
+                                        .startDate(project.getStartDate())
+                                        .endDate(project.getEndDate())
+                                        .status(project.getStatus())
+                                        .totalDeliveredTonnage(project.getTotalDeliveredTonnage())
+                                        .createdAt(project.getCreatedAt())
+                                        .updatedAt(project.getUpdatedAt())
+                                        .build();
     }
 }
