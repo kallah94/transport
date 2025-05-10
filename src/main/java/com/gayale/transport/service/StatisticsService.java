@@ -88,16 +88,16 @@ public class StatisticsService {
         double averageTonnagePerTrip = totalTrips > 0 ? totalTonnage / totalTrips : 0;
 
         return GeneralStatistics.builder()
-                                .totalTonnage(totalTonnage)
+                                .totalTonnage(totalTonnage/1000)
                                 .totalTrips(totalTrips)
                                 .activeProjects((int) activeProjectsCount)
                                 .activePurchaseOrders((int) activePurchaseOrdersCount)
-                                .averageTonnagePerTrip(averageTonnagePerTrip)
-                                .todayTonnage(todayTonnage)
+                                .averageTonnagePerTrip(averageTonnagePerTrip/1000)
+                                .todayTonnage(todayTonnage/1000)
                                 .todayTrips(todayTrips)
-                                .weekTonnage(weekTonnage)
+                                .weekTonnage(weekTonnage/1000)
                                 .weekTrips(weekTrips)
-                                .monthTonnage(monthTonnage)
+                                .monthTonnage(monthTonnage/1000)
                                 .monthTrips(monthTrips)
                                 .build();
     }
@@ -118,9 +118,9 @@ public class StatisticsService {
         return StatisticsPeriod.builder()
                                .startDate(startDate)
                                .endDate(endDate)
-                               .totalTonnage(totalTonnage)
+                               .totalTonnage(totalTonnage/1000)
                                .totalTrips(totalTrips)
-                               .averageTonnagePerTrip(averageTonnagePerTrip)
+                               .averageTonnagePerTrip(averageTonnagePerTrip/1000)
                                .build();
     }
 
@@ -146,9 +146,9 @@ public class StatisticsService {
                                        .entityType(StatisticsEntity.EntityType.PROJECT)
                                        .entityId(project.getId())
                                        .entityName(project.getName())
-                                       .totalTonnage(totalTonnage)
+                                       .totalTonnage(totalTonnage/1000)
                                        .totalTrips(totalTrips)
-                                       .averageTonnagePerTrip(averageTonnagePerTrip)
+                                       .averageTonnagePerTrip(averageTonnagePerTrip/1000)
                                        .build());
         }
 
@@ -177,9 +177,9 @@ public class StatisticsService {
                                        .entityType(StatisticsEntity.EntityType.PURCHASE_ORDER)
                                        .entityId(po.getId())
                                        .entityName(po.getOrderNumber())
-                                       .totalTonnage(totalTonnage)
+                                       .totalTonnage(totalTonnage/1000)
                                        .totalTrips(totalTrips)
-                                       .averageTonnagePerTrip(averageTonnagePerTrip)
+                                       .averageTonnagePerTrip(averageTonnagePerTrip/1000)
                                        .build());
         }
 
@@ -189,7 +189,7 @@ public class StatisticsService {
     public List<StatisticsEntity> getStatisticsByTransporter() {
         List<WeightTicket> allTickets = weightTicketRepository.findAll().stream()
                                                               .filter(ticket -> ticket.getStatus() != WeightTicket.TicketStatus.CANCELLED)
-                                                              .collect(Collectors.toList());
+                                                              .toList();
 
         Map<String, List<WeightTicket>> ticketsByTransporter = allTickets.stream()
                                                                          .collect(Collectors.groupingBy(WeightTicket::getTransporter));
@@ -210,9 +210,9 @@ public class StatisticsService {
                                        .entityType(StatisticsEntity.EntityType.TRANSPORTER)
                                        .entityId(transporter) // Using transporter name as ID
                                        .entityName(transporter)
-                                       .totalTonnage(totalTonnage)
+                                       .totalTonnage(totalTonnage/1000)
                                        .totalTrips(totalTrips)
-                                       .averageTonnagePerTrip(averageTonnagePerTrip)
+                                       .averageTonnagePerTrip(averageTonnagePerTrip/1000)
                                        .build());
         }
 
@@ -222,7 +222,7 @@ public class StatisticsService {
     public List<StatisticsEntity> getStatisticsByVehicle() {
         List<WeightTicket> allTickets = weightTicketRepository.findAll().stream()
                                                               .filter(ticket -> ticket.getStatus() != WeightTicket.TicketStatus.CANCELLED)
-                                                              .collect(Collectors.toList());
+                                                              .toList();
 
         Map<String, List<WeightTicket>> ticketsByVehicle = allTickets.stream()
                                                                      .collect(Collectors.groupingBy(WeightTicket::getVehicle));
@@ -243,9 +243,9 @@ public class StatisticsService {
                                        .entityType(StatisticsEntity.EntityType.VEHICLE)
                                        .entityId(vehicle) // Using vehicle registration as ID
                                        .entityName(vehicle)
-                                       .totalTonnage(totalTonnage)
+                                       .totalTonnage(totalTonnage/1000)
                                        .totalTrips(totalTrips)
-                                       .averageTonnagePerTrip(averageTonnagePerTrip)
+                                       .averageTonnagePerTrip(averageTonnagePerTrip/1000)
                                        .build());
         }
 
