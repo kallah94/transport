@@ -1,0 +1,15 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+
+logging:
+  level:
+    root: WARN
+    com.gayaletransport: INFO
+  file:
+    name: /var/log/gayale.transport/application.log
+
+app:
+  qrcode:
+    base-url: ${APP_URL}/tickets/

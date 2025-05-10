@@ -1,0 +1,20 @@
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: gayale_transport_dev
+     # username: ${MONGODB_USERNAME:}
+     # password: ${MONGODB_PASSWORD:}
+      authentication-database: admin
+
+logging:
+  level:
+    root: INFO
+    com.gayale.transport: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.security: DEBUG
+
+app:
+  qrcode:
+    base-url: http://localhost:4200/tickets/

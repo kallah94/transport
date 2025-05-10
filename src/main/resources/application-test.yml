@@ -1,0 +1,23 @@
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 0
+      database: gayale_transport_test
+  mongodb:
+    embedded:
+      version: 6.0.6
+
+logging:
+  level:
+    root: WARN
+    com.gayale.transport: DEBUG
+
+app:
+  qrcode:
+    base-url: http://test.example.com/tickets/
+  security:
+    jwt:
+      secret: testSecretKey
+      expiration: 3600000 # 1 hour in milliseconds
+      refresh-expiration: 86400000 # 24 hours in milliseconds
