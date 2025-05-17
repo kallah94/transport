@@ -1,12 +1,8 @@
 spring:
   data:
     mongodb:
-      host: localhost
-      port: 0
-      database: gayale_transport_test
-  mongodb:
-    embedded:
-      version: 6.0.6
+      uri: mongodb+srv://fmoussa:xgkg10v1F4qo1W7E@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority&appName=Cluster0
+      auto-index-creation: true
 
 logging:
   level:
