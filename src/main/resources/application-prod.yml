@@ -3,14 +3,12 @@ spring:
     mongodb:
       uri: mongodb+srv://fmoussa:xgkg10v1F4qo1W7E@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority&appName=Cluster0
       auto-index-creation: true
-
 logging:
   level:
     root: WARN
     com.gayale.transport: INFO
     org.springframework.data.mongodb: WARN
     org.springframework.security: WARN
-
 app:
   qrcode:
-    base-url: file:///tickets/
+    base-url: https://truck-transportation-management.onrender.com/tickets/
