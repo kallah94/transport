@@ -16,6 +16,6 @@ app:
     base-url: https://truck-transportation-management.onrender.com/tickets/
   security:
     jwt:
-      secret: testSecretKey
+      secret: gayeltransporttruckxhdkenehfe
       expiration: 3600000 # 1 hour in milliseconds
       refresh-expiration: 86400000 # 24 hours in milliseconds
