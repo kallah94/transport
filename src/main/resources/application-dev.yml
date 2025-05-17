@@ -1,16 +1,11 @@
 spring:
   data:
     mongodb:
-      host: localhost
-      port: 27017
-      database: gayale_transport_dev
-     # username: ${MONGODB_USERNAME:}
-     # password: ${MONGODB_PASSWORD:}
-      authentication-database: admin
+      uri: mongodb+srv://fmoussa:xgkg10v1F4qo1W7E@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority&appName=Cluster0
+      auto-index-creation: true
 
 logging:
   level:
-    root: INFO
     com.gayale.transport: DEBUG
     org.springframework.data.mongodb: DEBUG
     org.springframework.security: DEBUG

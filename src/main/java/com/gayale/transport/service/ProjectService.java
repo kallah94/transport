@@ -80,6 +80,8 @@ public class ProjectService {
         project.setName(projectDto.getName());
         project.setClient(projectDto.getClient());
         project.setDestination(projectDto.getDestination());
+        project.setProvenance(projectDto.getProvenance());
+        project.setProduct(projectDto.getProduct());
         project.setStartDate(projectDto.getStartDate());
         project.setEndDate(projectDto.getEndDate());
         project.setStatus(projectDto.getStatus() != null ? projectDto.getStatus() : Project.ProjectStatus.ACTIVE);
@@ -96,6 +98,8 @@ public class ProjectService {
         existingProject.setName(projectDto.getName());
         existingProject.setClient(projectDto.getClient());
         existingProject.setDestination(projectDto.getDestination());
+        existingProject.setProvenance(projectDto.getProvenance());
+        existingProject.setProduct(projectDto.getProduct());
         existingProject.setStartDate(projectDto.getStartDate());
         existingProject.setEndDate(projectDto.getEndDate());
         existingProject.setStatus(projectDto.getStatus());
@@ -128,6 +132,8 @@ public class ProjectService {
         return ProjectDto.builder()
                          .id(project.getId())
                          .name(project.getName())
+                         .provenance(project.getProvenance())
+                         .product(project.getProduct())
                          .client(project.getClient())
                          .destination(project.getDestination())
                          .startDate(project.getStartDate())
@@ -145,6 +151,8 @@ public class ProjectService {
                                         .name(project.getName())
                                         .client(project.getClient())
                                         .destination(project.getDestination())
+                                        .provenance(project.getProvenance())
+                                        .product(project.getProduct())
                                         .purchaseOrders(purchaseOrders)
                                         .startDate(project.getStartDate())
                                         .endDate(project.getEndDate())

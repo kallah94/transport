@@ -28,6 +28,10 @@ public class Project extends AuditableEntity {
 
     private String destination;
 
+    private String provenance;
+
+    private String product;
+
     private LocalDate startDate;
 
     private LocalDate endDate;

@@ -28,6 +28,10 @@ public class ProjectWithPurchaseOrders {
 
     private String destination;
 
+    private String provenance;
+
+    private String product;
+
     @NotNull(message = "Start date is required")
     private LocalDate startDate;
 
