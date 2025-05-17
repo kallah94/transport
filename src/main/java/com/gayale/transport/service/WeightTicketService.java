@@ -283,10 +283,10 @@ public class WeightTicketService {
 
     private void updateDeliveryQuantities(String purchaseOrderId, String projectId, double weightDifference) {
         // Update purchase order delivered quantity
-        purchaseOrderService.updateDeliveredQuantity(purchaseOrderId, weightDifference);
+        purchaseOrderService.updateDeliveredQuantity(purchaseOrderId, weightDifference/1000);
 
         // Update project total delivered tonnage
-        projectService.updateTotalDeliveredTonnage(projectId, weightDifference);
+        projectService.updateTotalDeliveredTonnage(projectId, weightDifference /1000);
     }
 
     private WeightTicketDto mapWeightTicketToDto(WeightTicket weightTicket) {

@@ -1,5 +1,9 @@
 package com.gayale.transport.dto;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.gayale.transport.model.Project;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,17 +12,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProjectDto {
+public class ProjectWithPurchaseOrders {
 
     private String id;
 
@@ -37,6 +35,8 @@ public class ProjectDto {
     @NotNull(message = "Start date is required")
     private LocalDate startDate;
 
+    private List<PurchaseOrderDto> purchaseOrders;
+
     private LocalDate endDate;
 
     private Project.ProjectStatus status;
@@ -46,5 +46,5 @@ public class ProjectDto {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-}
 
+}

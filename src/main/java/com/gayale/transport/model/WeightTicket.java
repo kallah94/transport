@@ -71,6 +71,6 @@ public class WeightTicket extends AuditableEntity {
         this.netWeight = this.loadedWeight - this.emptyWeight;
         // Variance calculation could be implemented based on specific business rules
         // For example, variance could be the difference between expected and actual weight
-        this.variance = 0.0; // Placeholder for custom variance calculation
+        this.variance = - this.netWeight; // Placeholder for custom variance calculation
     }
 }
