@@ -1,11 +1,16 @@
-# Production environment configuration
-# This file should be committed to version control without secrets
+# Common properties shared across all environments
+# DO NOT put secrets here - this file is typically committed to version control
 
 spring:
+  application:
+    name: gayale-transport
   data:
     mongodb:
       uri: ${MONGODB_URI}
       auto-index-creation: true
+
+server:
+  port: 8080
 
 logging:
   level:
@@ -16,7 +21,7 @@ logging:
 
 app:
   qrcode:
-    base-url: https://truck-transportation-management.onrender.com/tickets/
+    base-url: http://localhost:4200/tickets/
   security:
     jwt:
       expiration: 86400000

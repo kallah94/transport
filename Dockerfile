@@ -26,5 +26,6 @@ ENV SPRING_PROFILES_ACTIVE=prod
 # Expose the port the application runs on
 EXPOSE 8080
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Run the application with dynamic port assignment
+# Environment variables (MONGODB_URI, JWT_SECRET) should be passed at runtime
+ENTRYPOINT ["java", "-jar", "/app/app.jar", "--server.port=${PORT:8080}"]

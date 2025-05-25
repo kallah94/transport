@@ -62,7 +62,6 @@ public class TruckService implements ITruckService {
         Truck truck = modelMapper.map(truckDto, Truck.class);
         truck.setCreatedAt(LocalDateTime.now());
         truck.setUpdatedAt(LocalDateTime.now());
-
         Truck savedTruck = truckRepository.save(truck);
         return modelMapper.map(savedTruck, TruckDto.class);
     }

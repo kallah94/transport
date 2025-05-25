@@ -1,20 +1,19 @@
+# Development environment specific properties
+# This file should be in .gitignore to avoid committing secrets
+
 spring:
+  application:
+    name: gayale-transport
   data:
     mongodb:
-      uri: mongodb+srv://fmoussa:xgkg10v1F4qo1W7E@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority&appName=Cluster0
+      uri: ${MONGODB_URI}
       auto-index-creation: true
-
-logging:
-  level:
-    com.gayale.transport: DEBUG
-    org.springframework.data.mongodb: DEBUG
-    org.springframework.security: DEBUG
-
 app:
   qrcode:
-    base-url: https://truck-transportation-management.onrender.com/tickets/
+    base-url: http://localhost:4200/tickets/
   security:
     jwt:
-      secret: gayeltransporttruckxhdkenehfe
-      expiration: 3600000 # 1 hour in milliseconds
-      refresh-expiration: 8640000
+      expiration: 86400000
+      refresh-expiration: 604800000 # 7 days in milliseconds
+      secret: ${JWT_SECRET}
+
