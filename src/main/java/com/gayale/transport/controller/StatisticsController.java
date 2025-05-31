@@ -1,6 +1,7 @@
 package com.gayale.transport.controller;
 
 import com.gayale.transport.dto.statistics.GeneralStatistics;
+import com.gayale.transport.dto.statistics.StatisticsDate;
 import com.gayale.transport.dto.statistics.StatisticsEntity;
 import com.gayale.transport.dto.statistics.StatisticsPeriod;
 import com.gayale.transport.service.StatisticsService;
@@ -43,6 +44,26 @@ public class StatisticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         StatisticsPeriod statistics = statisticsService.getStatisticsByPeriod(startDate, endDate);
+        return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping("/date")
+    @Operation(summary = "Get statistics for a specific date",
+    description = "Returns general statistics for a given date")
+    public ResponseEntity<StatisticsDate> getStatisticsByDate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        StatisticsDate statistics = statisticsService.getStatisticsByDate(date);
+        return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping("/range-date")
+    @Operation(summary = "Get statistics for a range of date",
+    description = "Returns general statistics entry for each date in the range")
+    public ResponseEntity<List<StatisticsDate>> getStatisticsByDates(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<StatisticsDate> statistics = statisticsService.getStatisticsByDates(startDate, endDate);
         return ResponseEntity.ok(statistics);
     }
 

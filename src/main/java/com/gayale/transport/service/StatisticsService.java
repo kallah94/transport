@@ -1,8 +1,11 @@
 package com.gayale.transport.service;
 
 import com.gayale.transport.dto.statistics.GeneralStatistics;
+import com.gayale.transport.dto.statistics.StatisticsDate;
 import com.gayale.transport.dto.statistics.StatisticsEntity;
 import com.gayale.transport.dto.statistics.StatisticsPeriod;
+import com.gayale.transport.exception.DuplicateResourceException;
+import com.gayale.transport.exception.GlobalExceptionHandler;
 import com.gayale.transport.model.Project;
 import com.gayale.transport.model.PurchaseOrder;
 import com.gayale.transport.model.WeightTicket;
@@ -16,9 +19,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class StatisticsService {
@@ -26,6 +31,7 @@ public class StatisticsService {
     private final ProjectRepository projectRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final WeightTicketRepository weightTicketRepository;
+
 
     @Autowired
     public StatisticsService(ProjectRepository projectRepository,
@@ -106,7 +112,7 @@ public class StatisticsService {
         List<WeightTicket> tickets = weightTicketRepository.findByDateBetween(startDate, endDate)
                                                            .stream()
                                                            .filter(ticket -> ticket.getStatus() != WeightTicket.TicketStatus.CANCELLED)
-                                                           .collect(Collectors.toList());
+                                                           .toList();
 
         double totalTonnage = tickets.stream()
                                      .mapToDouble(WeightTicket::getNetWeight)
@@ -122,6 +128,62 @@ public class StatisticsService {
                                .totalTrips(totalTrips)
                                .averageTonnagePerTrip(averageTonnagePerTrip/1000)
                                .build();
+    }
+
+    public StatisticsDate getStatisticsByDate(LocalDate date) {
+        List<WeightTicket> tickets = weightTicketRepository.findByDate(date)
+                .stream()
+                .filter(ticket -> ticket.getStatus() != WeightTicket.TicketStatus.CANCELLED)
+                .toList();
+
+        double totalTonnage = tickets.stream()
+                .mapToDouble(WeightTicket::getNetWeight)
+                .sum();
+
+        int totalTrips = tickets.size();
+        double averageTonnagePerTrip = totalTrips > 0 ? totalTonnage / totalTrips : 0;
+        return StatisticsDate.builder()
+                             .date(date)
+                             .totalTonnage(totalTonnage/1000)
+                             .totalTrips(totalTrips)
+                             .averageTonnagePerTrip(averageTonnagePerTrip/1000)
+                             .build();
+    }
+
+    public List<StatisticsDate> getStatisticsByDates(LocalDate startDate, LocalDate endDate) {
+        if (startDate.isAfter(endDate)) {
+            return Collections.emptyList();
+        }
+
+        List<WeightTicket> allTickets = weightTicketRepository.findByDateBetween(startDate.minusDays(1), endDate.plusDays(1))
+                                                              .stream()
+                                                              .filter(ticket -> ticket.getStatus() != WeightTicket.TicketStatus.CANCELLED)
+                                                              .toList();
+
+
+        Map<LocalDate, List<WeightTicket>> ticketsByDate = allTickets.stream()
+                                                                     .collect(Collectors.groupingBy(WeightTicket::getDate));
+
+
+        return Stream.iterate(startDate, date -> !date.isAfter(endDate), date -> date.plusDays(1))
+                     .map(date -> calculateStatisticsForDate(date, ticketsByDate.getOrDefault(date, Collections.emptyList())))
+                     .toList();
+    }
+
+    private StatisticsDate calculateStatisticsForDate(LocalDate date, List<WeightTicket> tickets) {
+        double totalTonnage = tickets.stream()
+                                     .mapToDouble(WeightTicket::getNetWeight)
+                                     .sum();
+
+        int totalTrips = tickets.size();
+        double averageTonnagePerTrip = totalTrips > 0 ? totalTonnage / totalTrips : 0;
+
+        return StatisticsDate.builder()
+                             .date(date)
+                             .totalTonnage(totalTonnage / 1000)
+                             .totalTrips(totalTrips)
+                             .averageTonnagePerTrip(averageTonnagePerTrip / 1000)
+                             .build();
     }
 
     public List<StatisticsEntity> getStatisticsByProject() {
