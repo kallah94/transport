@@ -1,0 +1,29 @@
+# Common properties shared across all environments
+# DO NOT put secrets here - this file is typically committed to version control
+
+spring:
+  application:
+    name: gayale-transport
+  data:
+    mongodb:
+      uri: mongodb+srv://fmoussa:kallah@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority
+      auto-index-creation: true
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: WARN
+    com.gayale.transport: INFO
+    org.springframework.data.mongodb: WARN
+    org.springframework.security: WARN
+
+app:
+  qrcode:
+    base-url: http://localhost:4200/tickets/
+  security:
+    jwt:
+      expiration: 86400000
+      refresh-expiration: 604800000 # 7 days in milliseconds
+      secret: VtH7!aKz9#NnXq3$Pf@wJd5^Rb2ZsLmY%UgE0Cq*XiTp+AdGhKrMb4YuJeVo6WxB

@@ -1,7 +1,6 @@
 package com.gayale.transport.model;
 
 import com.gayale.transport.util.AuditableEntity;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
