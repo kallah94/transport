@@ -1,11 +1,13 @@
 package com.gayale.transport.model;
 
 import com.gayale.transport.util.AuditableEntity;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 
@@ -23,7 +25,9 @@ public class Truck extends AuditableEntity {
     @Indexed(unique = true)
     private String vehicle;
 
-    private String transporter;
+    @DBRef
+    @NotNull(message = "Transporter is required")
+    private TransporterEnterprise transporter;
 
     private String phone;
 
