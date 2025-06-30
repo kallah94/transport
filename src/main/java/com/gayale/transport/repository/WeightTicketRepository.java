@@ -20,5 +20,8 @@ public interface WeightTicketRepository extends MongoRepository<WeightTicket, St
     List<WeightTicket> findByTransporter(String transporter);
     List<WeightTicket> findBySupplier(String supplier);
     Page<WeightTicket> findAll(Pageable pageable);
+    Optional<WeightTicket> findByChecksum(String checksum);
+    boolean existsByChecksum(String checksum);
+    List<WeightTicket> findByVehicleAndDateAndStatus(String vehicle, LocalDate date, WeightTicket.TicketStatus status);
 }
 

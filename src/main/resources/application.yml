@@ -6,7 +6,8 @@ spring:
     name: gayale-transport
   data:
     mongodb:
-      uri: mongodb+srv://fmoussa:kallah@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority
+      #uri: mongodb+srv://fmoussa:kallah@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority
+      uri: mongodb://localhost:27017/gayal_transport_dev_local?retryWrites=true&w=majority
       auto-index-creation: true
 
 server:

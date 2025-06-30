@@ -25,9 +25,4 @@ public class TruckRequest {
     @Pattern(regexp = "^(\\+221|00221)?[ ]?[7][0-9]{1}[ ]?[0-9]{3}[ ]?[0-9]{2}[ ]?[0-9]{2}$",
             message = "Must be a valid Senegal phone number")
     private String phone;
-
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 }

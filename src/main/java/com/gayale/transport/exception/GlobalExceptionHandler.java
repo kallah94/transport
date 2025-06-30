@@ -30,6 +30,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(DuplicateTicketException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateTicket(DuplicateTicketException ex) {
+        Map<String, Object> error = Map.of(
+                "error", "DUPLICATE_TICKET",
+                "message", ex.getMessage(),
+                "timestamp", LocalDateTime.now(),
+                "existingTicketId", ex.getExistingTicketId() != null ? ex.getExistingTicketId() : "",
+                "checksum", ex.getChecksum() != null ? ex.getChecksum() : ""
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
