@@ -1,0 +1,13 @@
+# TEMPLATE FILE - Copy this file and rename it to application-dev.yml or application-prod.yml
+# Replace the placeholder values with your actual secrets
+# DO commit this template file to version control
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb://username:password@host:port/database
+
+app:
+  security:
+    jwt:
+      secret: replace_with_your_secret_key_at_least_32_chars

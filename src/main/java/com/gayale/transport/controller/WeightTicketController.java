@@ -1,6 +1,7 @@
 package com.gayale.transport.controller;
 
 import com.gayale.transport.dto.WeightTicketDto;
+import com.gayale.transport.exception.DuplicateTicketException;
 import com.gayale.transport.service.WeightTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -96,9 +97,22 @@ public class WeightTicketController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
     @Operation(summary = "Create a new weight ticket", description = "Creates a new weight ticket and returns the created weight ticket")
-    public ResponseEntity<WeightTicketDto> createWeightTicket(@Valid @RequestBody WeightTicketDto weightTicketDto) {
-        WeightTicketDto createdTicket = weightTicketService.createWeightTicket(weightTicketDto);
-        return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
+    public ResponseEntity<?> createWeightTicket(@Valid @RequestBody WeightTicketDto weightTicketDto) {
+        try {
+            WeightTicketDto createdTicket = weightTicketService.createWeightTicket(weightTicketDto);
+            return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
+        } catch (DuplicateTicketException e) {
+            // Retourner info sur le ticket existant
+            Map<String, Object> error = Map.of(
+                    "error", "DUPLICATE_TICKET",
+                    "message", e.getMessage(),
+                    "existingTicketId", e.getExistingTicketId(),
+                    "checksum", e.getChecksum(),
+                    "originalTicket", weightTicketService.getOriginalTicket(e.getChecksum())
+            );
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        }
+
     }
 
     @PutMapping("/{id}")

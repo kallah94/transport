@@ -2,21 +2,26 @@ package com.gayale.transport.iservices;
 
 import java.util.List;
 
-import com.gayale.transport.dto.TruckDto;
+import com.gayale.transport.dto.truck.TruckRequest;
+import com.gayale.transport.dto.truck.TruckResponse;
 
 public interface ITruckService {
 
-    List<TruckDto> getAllTrucks();
+    List<TruckResponse> getAllTrucks();
 
-    TruckDto getTruckById(String id);
+    TruckResponse getTruckById(String id);
 
-    TruckDto getTruckByVehicle(String vehicle);
+    TruckResponse getTruckByVehicle(String vehicle);
 
-    List<TruckDto> getTrucksByTransporter(String transporter);
+    // Find trucks by transporter ID (more practical)
+    List<TruckResponse> getTrucksByTransporterId(String transporterId);
 
-    TruckDto createTruck(TruckDto truckDto);
+    // Find trucks by transporter name (for flexibility)
+    List<TruckResponse> getTrucksByTransporterName(String transporterName);
 
-    TruckDto updateTruck(String id, TruckDto truckDto);
+    TruckResponse createTruck(TruckRequest truckRequest);
+
+    TruckResponse updateTruck(String id, TruckRequest truckRequest);
 
     void deleteTruck(String id);
 

@@ -1,6 +1,7 @@
 package com.gayale.transport.service;
 
 import com.gayale.transport.dto.WeightTicketDto;
+import com.gayale.transport.exception.DuplicateTicketException;
 import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.model.WeightTicket;
 import com.gayale.transport.repository.PurchaseOrderRepository;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -140,12 +142,17 @@ public class WeightTicketService {
         weightTicket.setProjectId(weightTicketDto.getProjectId());
         weightTicket.setPurchaseOrderId(weightTicketDto.getPurchaseOrderId());
         weightTicket.setOperatorName(weightTicketDto.getOperatorName());
-        weightTicket.setStatus(WeightTicket.TicketStatus.PENDING);
-
-        // Calculate net weight and variance
+        weightTicket.setStatus(WeightTicket.TicketStatus.VALIDATED);
         weightTicket.calculateWeights();
-
-        // Save ticket first to get an ID
+        weightTicket.calculateWeightsAndChecksum();
+        Optional<WeightTicket> existingTicket = weightTicketRepository.findByChecksum(weightTicket.getChecksum());
+        if (existingTicket.isPresent()) {
+            throw new DuplicateTicketException(
+                    "Un ticket identique existe déjà avec les mêmes données critiques",
+                    existingTicket.get().getId(),
+                    weightTicket.getChecksum()
+            );
+        }
         WeightTicket savedTicket = weightTicketRepository.save(weightTicket);
 
         // Generate QR code
@@ -159,6 +166,26 @@ public class WeightTicketService {
         updateDeliveryQuantities(savedTicket.getPurchaseOrderId(), savedTicket.getProjectId(), savedTicket.getNetWeight());
 
         return mapWeightTicketToDto(savedTicket);
+    }
+
+    /**
+     * Trouve les tickets similaires pour aide à l'opérateur
+     */
+    public List<WeightTicketDto> findSimilarTickets(WeightTicketDto ticketDto) {
+        WeightTicket tempTicket = mapDtoToEntity(ticketDto);
+        tempTicket.calculateWeightsAndChecksum();
+
+        // Chercher tickets avec même véhicule et date proche
+        LocalDate date = tempTicket.getDate();
+        return weightTicketRepository
+                .findByVehicleAndDateAndStatus(
+                        tempTicket.getVehicle(),
+                        date,
+                        WeightTicket.TicketStatus.VALIDATED
+                )
+                .stream()
+                .map(this::mapWeightTicketToDto)
+                .toList();
     }
 
     @Transactional
@@ -280,6 +307,25 @@ public class WeightTicketService {
 
         return ticketNumber;
     }
+    /**
+     * Vérifie si un ticket est un doublon potentiel
+     */
+    public boolean isDuplicateTicket(WeightTicketDto ticketDto) {
+        WeightTicket tempTicket = mapDtoToEntity(ticketDto);
+        tempTicket.calculateWeightsAndChecksum();
+
+        return weightTicketRepository.existsByChecksum(tempTicket.getChecksum());
+    }
+
+    /**
+     * Récupère le ticket original en cas de doublon
+     */
+    public WeightTicketDto getOriginalTicket(String checksum) {
+        return weightTicketRepository.findByChecksum(checksum)
+                                     .map(this::mapWeightTicketToDto)
+                                     .orElse(null);
+    }
+
 
     private void updateDeliveryQuantities(String purchaseOrderId, String projectId, double weightDifference) {
         // Update purchase order delivered quantity
@@ -316,4 +362,18 @@ public class WeightTicketService {
                               .updatedAt(weightTicket.getUpdatedAt())
                               .build();
     }
+
+    private WeightTicket mapDtoToEntity(WeightTicketDto dto) {
+        WeightTicket ticket = new WeightTicket();
+        ticket.setDate(dto.getDate() != null ? dto.getDate() : LocalDate.now());
+        ticket.setEmptyWeight(dto.getEmptyWeight());
+        ticket.setLoadedWeight(dto.getLoadedWeight());
+        ticket.setVehicle(dto.getVehicle());
+        ticket.setDriver(dto.getDriver());
+        ticket.setProduct(dto.getProduct());
+        ticket.setPurchaseOrderId(dto.getPurchaseOrderId());
+        return ticket;
+    }
+
+
 }
