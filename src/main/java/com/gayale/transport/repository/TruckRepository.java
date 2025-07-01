@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.gayale.transport.model.Truck;
 import com.gayale.transport.model.TransporterEnterprise;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 public interface TruckRepository extends MongoRepository<Truck, String> {
 
@@ -23,4 +24,7 @@ public interface TruckRepository extends MongoRepository<Truck, String> {
     Optional<Truck> findByPhone(String phone);
 
     boolean existsByVehicle(String vehicle);
+
+    long countByTransporter(TransporterEnterprise transporter);
+
 }

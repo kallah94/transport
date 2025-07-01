@@ -16,7 +16,7 @@ server:
 logging:
   level:
     root: WARN
-    com.gayale.transport: INFO
+    com.gayale.transport: DEBUG
     org.springframework.data.mongodb: WARN
     org.springframework.security: WARN
 

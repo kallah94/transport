@@ -13,6 +13,7 @@ import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.model.TransporterEnterprise;
 import com.gayale.transport.model.User;
 import com.gayale.transport.repository.TransporterEnterpriseRepository;
+import com.gayale.transport.repository.TruckRepository;
 import com.gayale.transport.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,7 @@ public class TransporterEnterpriseService {
 
     private final TransporterEnterpriseRepository transporterEnterpriseRepository;
     private final UserRepository userRepository;
+    private final TruckRepository truckRepository;
     private final ModelMapper modelMapper;
 
     public TransporterEnterpriseResponse createTransporter(TransporterEnterpriseRequest request) {

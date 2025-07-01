@@ -67,22 +67,33 @@ public class TruckService implements ITruckService {
                               .collect(Collectors.toList());
     }
 
+
+    public void updateTransporterTruckCount(TransporterEnterprise transporter) {
+        try {
+            long count = truckRepository.countByTransporter(transporter);
+            transporter.setNumberOfTrucks((int) count);
+            transporterEnterpriseRepository.save(transporter);
+        } catch (Exception e) {
+            System.err.println("Error details: " + e.getMessage());
+        }
+    }
+
     @Override
     public TruckResponse createTruck(TruckRequest truckRequest) {
         if (truckRepository.existsByVehicle(truckRequest.getVehicle())) {
+            System.err.println("ERROR: Vehicle already exists: " + truckRequest.getVehicle());
             throw new DuplicateResourceException("Truck with this vehicle number " + truckRequest.getVehicle() + " already exists");
         }
-
-        // Validate that the transporter exists
         TransporterEnterprise transporter = transporterEnterpriseRepository.findById(truckRequest.getTransporterId())
-                                                                           .orElseThrow(() -> new ResourceNotFoundException("Transporter not found with id: " + truckRequest.getTransporterId()));
-
+               .orElseThrow(() -> new ResourceNotFoundException("Transporter not found with id: " + truckRequest.getTransporterId()));
         Truck truck = modelMapper.map(truckRequest, Truck.class);
-        truck.setTransporter(transporter); // Set the actual transporter object
+        System.err.println("truck id " + truck.getId());
+        truck.setId(null);
+        truck.setTransporter(transporter);
         truck.setCreatedAt(LocalDateTime.now());
         truck.setUpdatedAt(LocalDateTime.now());
-
         Truck savedTruck = truckRepository.save(truck);
+        this.updateTransporterTruckCount(transporter);
         return modelMapper.map(savedTruck, TruckResponse.class);
     }
 
@@ -115,10 +126,11 @@ public class TruckService implements ITruckService {
 
     @Override
     public void deleteTruck(String id) {
-        if (!truckRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Truck not found with id: " + id);
-        }
+        Truck truck = truckRepository.findById(id)
+         .orElseThrow(() -> new ResourceNotFoundException("Truck not found with id: " + id));
+        TransporterEnterprise transporter = truck.getTransporter();
         truckRepository.deleteById(id);
+        updateTransporterTruckCount(transporter);
     }
 
     @Override

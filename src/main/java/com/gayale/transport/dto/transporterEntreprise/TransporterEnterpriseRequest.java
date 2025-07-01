@@ -25,9 +25,6 @@ public class TransporterEnterpriseRequest {
     @NotNull(message = "L'ID du représentant est obligatoire")
     private String representativeId;
 
-    @Min(value = 0, message = "Le nombre de camions ne peut pas être négatif")
-    private Integer numberOfTrucks = 0;
-
     private String phone;
 
     @Email(message = "Format d'email invalide")
