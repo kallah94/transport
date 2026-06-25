@@ -42,9 +42,11 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user",
-            description = "Invalidates the user's refresh token")
-    public ResponseEntity<Void> logout(@RequestParam String userId) {
-        authService.logout(userId);
+            description = "Invalidates the refresh token of the currently authenticated user")
+    public ResponseEntity<Void> logout(org.springframework.security.core.Authentication authentication) {
+        if (authentication != null) {
+            authService.logout(authentication.getName());
+        }
         return ResponseEntity.ok().build();
     }
 }

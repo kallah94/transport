@@ -23,20 +23,25 @@ public class MongoDbSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Check if there are any users in the database
-        if (userRepository.count() == 0) {
-            // Create admin user
-            User adminUser = new User();
-            adminUser.setUsername("admin");
-            adminUser.setEmail("admin@gayaletransport.com");
-            adminUser.setFullName("Admin User");
-            adminUser.setPassword(passwordEncoder.encode("Admin123!"));
-            adminUser.setRole(User.UserRole.ADMIN);
-            adminUser.setLastLogin(LocalDateTime.now());
+        // Seed des comptes de démonstration (alignés avec les identifiants du frontend).
+        // Idempotent : ne crée chaque compte que s'il n'existe pas déjà.
+        seedUser("admin", "admin@gayaletransport.com", "Administrateur", "admin", User.UserRole.ADMIN);
+        seedUser("agent", "agent@gayaletransport.com", "Agent de saisie", "agent", User.UserRole.AGENT);
+        seedUser("guest", "guest@gayaletransport.com", "Invité", "guest", User.UserRole.GUEST);
+    }
 
-            userRepository.save(adminUser);
-
-            System.out.println("Admin user created successfully with username: admin and password: Admin123!");
+    private void seedUser(String username, String email, String fullName, String rawPassword, User.UserRole role) {
+        if (userRepository.existsByUsername(username)) {
+            return;
         }
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setFullName(fullName);
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setRole(role);
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+        System.out.println("Seed user créé : " + username + " (rôle " + role + ")");
     }
 }

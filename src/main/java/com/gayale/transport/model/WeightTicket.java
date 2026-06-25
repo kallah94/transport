@@ -75,7 +75,9 @@ public class WeightTicket extends AuditableEntity {
         PENDING, VALIDATED, CANCELLED
     }
 
-    // Calculate net weight and variance
+    // Calcule le poids net (charge - vide).
+    // TODO(metier) : la variance attend une definition claire. Faute de poids attendu
+    // sur le ticket, elle reste a -netWeight (placeholder). A preciser avec le metier.
     public void calculateWeights() {
         this.netWeight = this.loadedWeight - this.emptyWeight;
         this.variance = - this.netWeight;
@@ -158,10 +160,6 @@ public class WeightTicket extends AuditableEntity {
 
     public boolean verifyIntegrity() {
         return isChecksumValid();
-    }
-
-    private String nullSafe(String value) {
-        return value != null ? value : "null";
     }
 
     public void calculateWeightsAndChecksum() {

@@ -17,11 +17,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -89,9 +92,13 @@ public class AuthService {
                                          User user = userRepository.findById(userId)
                                                                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-                                         // Create new tokens
+                                         // Create new tokens with a proper UserDetails principal and authorities
+                                         List<SimpleGrantedAuthority> authorities = List.of(
+                                                 new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+                                         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                                                 user.getUsername(), user.getPassword(), authorities);
                                          Authentication authentication = new UsernamePasswordAuthenticationToken(
-                                                 user.getUsername(), null, null);
+                                                 userDetails, null, authorities);
                                          String newToken = tokenProvider.generateToken(authentication);
                                          RefreshToken newRefreshToken = createRefreshToken(user.getId());
 
@@ -104,9 +111,10 @@ public class AuthService {
                                      .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
     }
 
-    public void logout(String userId) {
-        refreshTokenRepository.findByUserId(userId)
-                              .ifPresent(refreshTokenRepository::delete);
+    public void logout(String username) {
+        userRepository.findByUsername(username)
+                      .ifPresent(user -> refreshTokenRepository.findByUserId(user.getId())
+                                                               .ifPresent(refreshTokenRepository::delete));
     }
 
     private RefreshToken createRefreshToken(String userId) {

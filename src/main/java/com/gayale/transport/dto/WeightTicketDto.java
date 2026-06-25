@@ -25,11 +25,10 @@ public class WeightTicketDto {
     @NotNull(message = "Date is required")
     private LocalDate date;
 
-    @NotNull(message = "Empty weight is required")
+    // @NotNull est sans effet sur un primitif (jamais null) : on garde uniquement @Positive
     @Positive(message = "Empty weight must be positive")
     private double emptyWeight;
 
-    @NotNull(message = "Loaded weight is required")
     @Positive(message = "Loaded weight must be positive")
     private double loadedWeight;
 

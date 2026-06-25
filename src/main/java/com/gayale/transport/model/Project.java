@@ -9,8 +9,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
 
 @Document(collection = "projects")
 @Data
@@ -35,8 +33,6 @@ public class Project extends AuditableEntity {
     private LocalDate startDate;
 
     private LocalDate endDate;
-
-    private Set<String> purchaseOrderIds;
 
     private ProjectStatus status;
 

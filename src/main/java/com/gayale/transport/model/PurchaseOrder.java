@@ -45,7 +45,10 @@ public class PurchaseOrder extends AuditableEntity {
     // Method to recalculate delivery metrics
     public void recalculateDeliveryMetrics() {
         this.remainingQuantity = this.orderedQuantity - this.deliveredQuantity;
-        this.deliveryPercentage = (this.deliveredQuantity / this.orderedQuantity) * 100;
+        // Garde-fou contre la division par zéro (orderedQuantity == 0 -> NaN)
+        this.deliveryPercentage = this.orderedQuantity > 0
+                ? (this.deliveredQuantity / this.orderedQuantity) * 100
+                : 0;
 
         // Update status based on delivery percentage
         if (this.deliveryPercentage >= 100) {

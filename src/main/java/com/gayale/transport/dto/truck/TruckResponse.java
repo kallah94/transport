@@ -15,7 +15,6 @@ public class TruckResponse {
     private TransporterTruckDto transporter;
     private String driverName;
     private String phone;
-    private boolean active;
     private String createdAt;
     private String updatedAt;
 }

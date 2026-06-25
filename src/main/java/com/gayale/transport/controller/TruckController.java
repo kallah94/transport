@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/trucks")
+@RequestMapping("/trucks")
 @SecurityRequirement(name = "JWT")
 @Tag(name = "Trucks", description = "API for Truck Management")
 public class TruckController {

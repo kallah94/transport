@@ -143,7 +143,7 @@ public class WeightTicketService {
         weightTicket.setPurchaseOrderId(weightTicketDto.getPurchaseOrderId());
         weightTicket.setOperatorName(weightTicketDto.getOperatorName());
         weightTicket.setStatus(WeightTicket.TicketStatus.VALIDATED);
-        weightTicket.calculateWeights();
+        // calculateWeightsAndChecksum() appelle deja calculateWeights() : pas de double calcul
         weightTicket.calculateWeightsAndChecksum();
         Optional<WeightTicket> existingTicket = weightTicketRepository.findByChecksum(weightTicket.getChecksum());
         if (existingTicket.isPresent()) {
@@ -236,6 +236,10 @@ public class WeightTicketService {
                 updateDeliveryQuantities(existingTicket.getPurchaseOrderId(), existingTicket.getProjectId(), weightDifference);
             }
         }
+
+        // Recalculer le checksum apres modification des champs critiques
+        // (sinon le checksum stocke devient obsolete et l'integrite est faussee)
+        existingTicket.updateChecksum();
 
         WeightTicket updatedTicket = weightTicketRepository.save(existingTicket);
         return mapWeightTicketToDto(updatedTicket);
@@ -371,7 +375,17 @@ public class WeightTicketService {
         ticket.setVehicle(dto.getVehicle());
         ticket.setDriver(dto.getDriver());
         ticket.setProduct(dto.getProduct());
+        // Tous les champs ci-dessous entrent dans le calcul du checksum : ils doivent
+        // etre copies pour que la detection de doublon soit coherente avec la creation.
+        ticket.setClient(dto.getClient());
+        ticket.setSupplier(dto.getSupplier());
+        ticket.setOrigin(dto.getOrigin());
+        ticket.setDestination(dto.getDestination());
+        ticket.setTransporter(dto.getTransporter());
+        ticket.setPurchaseOrderNumber(dto.getPurchaseOrderNumber());
+        ticket.setProjectId(dto.getProjectId());
         ticket.setPurchaseOrderId(dto.getPurchaseOrderId());
+        ticket.setOperatorName(dto.getOperatorName());
         return ticket;
     }
 
