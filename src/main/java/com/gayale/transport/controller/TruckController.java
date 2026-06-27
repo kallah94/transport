@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.gayale.transport.dto.truck.TruckRequest;
 import com.gayale.transport.dto.truck.TruckResponse;
+import com.gayale.transport.dto.truck.TruckStatistics;
 import com.gayale.transport.service.TruckService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,6 +54,12 @@ public class TruckController {
     public ResponseEntity<TruckResponse> getTruckById(
             @Parameter(description = "Truck ID") @PathVariable String id) {
         return ResponseEntity.ok(truckService.getTruckById(id));
+    }
+
+    @GetMapping("/{id}/statistics")
+    @Operation(summary = "Truck statistics", description = "Tonnage, voyages et repartition pour un camion")
+    public ResponseEntity<TruckStatistics> getTruckStatistics(@PathVariable String id) {
+        return ResponseEntity.ok(truckService.getTruckStatistics(id));
     }
 
     @GetMapping("/vehicle/{vehicle}")

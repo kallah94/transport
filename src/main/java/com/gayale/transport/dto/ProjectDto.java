@@ -40,8 +40,9 @@ public class ProjectDto {
 
     private double totalDeliveredTonnage;
 
+    private double distanceKm;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 }
-

@@ -38,6 +38,9 @@ public class Project extends AuditableEntity {
 
     private double totalDeliveredTonnage;
 
+    // Distance aller (km) de la route provenance -> destination (dotation carburant)
+    private double distanceKm;
+
     public enum ProjectStatus {
         ACTIVE, COMPLETED, CANCELLED
     }

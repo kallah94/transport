@@ -15,6 +15,8 @@ public class TruckResponse {
     private TransporterTruckDto transporter;
     private String driverName;
     private String phone;
+    private double capacityTonnes;
+    private double fuelConsumptionLPerKm;
     private String createdAt;
     private String updatedAt;
 }

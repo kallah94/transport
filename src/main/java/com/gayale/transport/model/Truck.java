@@ -33,4 +33,10 @@ public class Truck extends AuditableEntity {
 
     private String driverName;
 
+    // Capacite utile en tonnes (informatif)
+    private double capacityTonnes;
+
+    // Dotation carburant : consommation en L/km (saisie directe par camion)
+    private double fuelConsumptionLPerKm;
+
 }

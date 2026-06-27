@@ -43,6 +43,8 @@ public class ProjectWithPurchaseOrders {
 
     private double totalDeliveredTonnage;
 
+    private double distanceKm;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

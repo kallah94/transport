@@ -82,6 +82,7 @@ public class ProjectService {
         project.setDestination(projectDto.getDestination());
         project.setProvenance(projectDto.getProvenance());
         project.setProduct(projectDto.getProduct());
+        project.setDistanceKm(projectDto.getDistanceKm());
         project.setStartDate(projectDto.getStartDate());
         project.setEndDate(projectDto.getEndDate());
         project.setStatus(projectDto.getStatus() != null ? projectDto.getStatus() : Project.ProjectStatus.ACTIVE);
@@ -100,6 +101,7 @@ public class ProjectService {
         existingProject.setDestination(projectDto.getDestination());
         existingProject.setProvenance(projectDto.getProvenance());
         existingProject.setProduct(projectDto.getProduct());
+        existingProject.setDistanceKm(projectDto.getDistanceKm());
         existingProject.setStartDate(projectDto.getStartDate());
         existingProject.setEndDate(projectDto.getEndDate());
         existingProject.setStatus(projectDto.getStatus());
@@ -140,6 +142,7 @@ public class ProjectService {
                          .endDate(project.getEndDate())
                          .status(project.getStatus())
                          .totalDeliveredTonnage(project.getTotalDeliveredTonnage())
+                         .distanceKm(project.getDistanceKm())
                          .createdAt(project.getCreatedAt())
                          .updatedAt(project.getUpdatedAt())
                          .build();
@@ -158,6 +161,7 @@ public class ProjectService {
                                         .endDate(project.getEndDate())
                                         .status(project.getStatus())
                                         .totalDeliveredTonnage(project.getTotalDeliveredTonnage())
+                                        .distanceKm(project.getDistanceKm())
                                         .createdAt(project.getCreatedAt())
                                         .updatedAt(project.getUpdatedAt())
                                         .build();
