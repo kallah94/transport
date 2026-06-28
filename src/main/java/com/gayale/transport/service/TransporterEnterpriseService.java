@@ -13,6 +13,7 @@ import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.model.TransporterEnterprise;
 import com.gayale.transport.model.User;
 import com.gayale.transport.repository.TransporterEnterpriseRepository;
+import com.gayale.transport.repository.TruckRepository;
 import com.gayale.transport.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,7 @@ public class TransporterEnterpriseService {
 
     private final TransporterEnterpriseRepository transporterEnterpriseRepository;
     private final UserRepository userRepository;
+    private final TruckRepository truckRepository;
     private final ModelMapper modelMapper;
 
     public TransporterEnterpriseResponse createTransporter(TransporterEnterpriseRequest request) {
@@ -63,27 +65,25 @@ public class TransporterEnterpriseService {
             throw new DuplicateResourceException("Une entreprise avec ce nom existe déjà : " + request.getName());
         }
 
+        // Comparaison sûre côté requête pour éviter un NPE si le matricule existant est null
         if (request.getRegistrationNumber() != null &&
-            !existingTransporter.getRegistrationNumber().equals(request.getRegistrationNumber()) &&
+            !request.getRegistrationNumber().equals(existingTransporter.getRegistrationNumber()) &&
             transporterEnterpriseRepository.existsByRegistrationNumber(request.getRegistrationNumber())) {
             throw new DuplicateResourceException("Une entreprise avec ce matricule existe déjà : " + request.getRegistrationNumber());
         }
 
-        if(!existingTransporter.getRepresentative().getId().equals(request.getRepresentativeId())) {
-            User representative = userRepository.findById(request.getRepresentativeId())
-                                                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable avec l'ID : " + request.getRepresentativeId()));
-            existingTransporter.setRepresentative(representative);
+        // Conserver le représentant courant ; ne le recharger que s'il change
+        User representative = existingTransporter.getRepresentative();
+        if (representative == null || !representative.getId().equals(request.getRepresentativeId())) {
+            representative = userRepository.findById(request.getRepresentativeId())
+                                           .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable avec l'ID : " + request.getRepresentativeId()));
         }
 
-        // Mettre à jour les champs modifiables
+        // Mettre à jour les champs modifiables (name, address, numberOfTrucks, phone, email, registrationNumber)
         modelMapper.map(request, existingTransporter);
 
-        if (!existingTransporter.getRepresentative().getId().equals(request.getRepresentativeId())) {
-            User representative = userRepository.findById(request.getRepresentativeId())
-                                                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable avec l'ID : " + request.getRepresentativeId()));
-            existingTransporter.setRepresentative(representative);
-        }
-
+        // Réaffecter explicitement les champs non couverts / écrasables par le mapping
+        existingTransporter.setRepresentative(representative);
         if (request.getActive() != null) {
             existingTransporter.setActive(request.getActive());
         }

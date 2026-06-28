@@ -16,15 +16,17 @@ server:
 logging:
   level:
     root: WARN
-    com.gayale.transport: INFO
+    com.gayale.transport: DEBUG
     org.springframework.data.mongodb: WARN
     org.springframework.security: WARN
 
 app:
   qrcode:
-    base-url: http://localhost:4200/tickets/
+    base-url: ${QRCODE_BASE_URL:http://localhost:4200/tickets/}
   security:
     jwt:
       expiration: 86400000
       refresh-expiration: 604800000 # 7 days in milliseconds
-      secret: VtH7!aKz9#NnXq3$Pf@wJd5^Rb2ZsLmY%UgE0Cq*XiTp+AdGhKrMb4YuJeVo6WxB
+      # Le secret doit être fourni via la variable d'environnement JWT_SECRET.
+      # La valeur de repli ci-dessous ne sert QU'AU développement local.
+      secret: ${JWT_SECRET:VtH7!aKz9#NnXq3$Pf@wJd5^Rb2ZsLmY%UgE0Cq*XiTp+AdGhKrMb4YuJeVo6WxB}

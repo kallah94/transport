@@ -4,8 +4,6 @@ import com.gayale.transport.dto.statistics.GeneralStatistics;
 import com.gayale.transport.dto.statistics.StatisticsDate;
 import com.gayale.transport.dto.statistics.StatisticsEntity;
 import com.gayale.transport.dto.statistics.StatisticsPeriod;
-import com.gayale.transport.exception.DuplicateResourceException;
-import com.gayale.transport.exception.GlobalExceptionHandler;
 import com.gayale.transport.model.Project;
 import com.gayale.transport.model.PurchaseOrder;
 import com.gayale.transport.model.WeightTicket;

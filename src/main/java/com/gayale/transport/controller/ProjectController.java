@@ -58,7 +58,7 @@ public class ProjectController {
     }
 
     @PostMapping
-  //  @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENT')")
     @Operation(summary = "Create a new project", description = "Creates a new project and returns the created project")
     public ResponseEntity<ProjectDto> createProject(@Valid @RequestBody ProjectDto projectDto) {
         ProjectDto createdProject = projectService.createProject(projectDto);

@@ -9,8 +9,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
 
 @Document(collection = "projects")
 @Data
@@ -36,11 +34,12 @@ public class Project extends AuditableEntity {
 
     private LocalDate endDate;
 
-    private Set<String> purchaseOrderIds;
-
     private ProjectStatus status;
 
     private double totalDeliveredTonnage;
+
+    // Distance aller (km) de la route provenance -> destination (dotation carburant)
+    private double distanceKm;
 
     public enum ProjectStatus {
         ACTIVE, COMPLETED, CANCELLED

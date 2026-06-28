@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,10 @@ public class TruckRequest {
     @Pattern(regexp = "^(\\+221|00221)?[ ]?[7][0-9]{1}[ ]?[0-9]{3}[ ]?[0-9]{2}[ ]?[0-9]{2}$",
             message = "Must be a valid Senegal phone number")
     private String phone;
+
+    @PositiveOrZero(message = "La capacite (tonnes) doit etre positive ou nulle")
+    private double capacityTonnes;
+
+    @PositiveOrZero(message = "La consommation carburant (L/km) doit etre positive ou nulle")
+    private double fuelConsumptionLPerKm;
 }

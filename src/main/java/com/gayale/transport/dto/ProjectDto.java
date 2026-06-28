@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Data
 @Builder
@@ -43,8 +40,9 @@ public class ProjectDto {
 
     private double totalDeliveredTonnage;
 
+    private double distanceKm;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 }
-

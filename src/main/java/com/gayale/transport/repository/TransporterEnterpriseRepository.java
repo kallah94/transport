@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 
 public interface TransporterEnterpriseRepository extends MongoRepository<TransporterEnterprise, String> {
     /**
@@ -96,4 +97,8 @@ public interface TransporterEnterpriseRepository extends MongoRepository<Transpo
      */
     @Query("{'createdAt': {$gte: ?0}}")
     List<TransporterEnterprise> findRecentlyCreated(java.time.LocalDateTime since);
+
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$set': { 'numberOfTrucks': ?1 } }")
+    void updateNumberOfTrucks(String id, Integer count);
 }
