@@ -7,6 +7,8 @@ import com.gayale.transport.dto.payment.PaymentLineDto;
 import com.gayale.transport.dto.payment.PaymentStatementResponse;
 import com.gayale.transport.exception.MissingRateException;
 import com.gayale.transport.exception.ResourceNotFoundException;
+import com.gayale.transport.model.DriverPaymentStatement;
+import com.gayale.transport.model.DriverPayoutLine;
 import com.gayale.transport.model.DriverRate;
 import com.gayale.transport.model.FuelConfig;
 import com.gayale.transport.model.PaymentLine;
@@ -17,6 +19,7 @@ import com.gayale.transport.model.TransporterEnterprise;
 import com.gayale.transport.model.TransporterRate;
 import com.gayale.transport.model.Truck;
 import com.gayale.transport.model.WeightTicket;
+import com.gayale.transport.repository.DriverPaymentStatementRepository;
 import com.gayale.transport.repository.DriverRateRepository;
 import com.gayale.transport.repository.FuelConfigRepository;
 import com.gayale.transport.repository.PaymentStatementRepository;
@@ -33,10 +36,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,6 +52,7 @@ public class PaymentService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final TransporterRateRepository transporterRateRepository;
     private final DriverRateRepository driverRateRepository;
+    private final DriverPaymentStatementRepository driverPaymentStatementRepository;
     private final FuelConfigRepository fuelConfigRepository;
     private final PaymentStatementRepository paymentStatementRepository;
 
@@ -60,6 +64,7 @@ public class PaymentService {
                           PurchaseOrderRepository purchaseOrderRepository,
                           TransporterRateRepository transporterRateRepository,
                           DriverRateRepository driverRateRepository,
+                          DriverPaymentStatementRepository driverPaymentStatementRepository,
                           FuelConfigRepository fuelConfigRepository,
                           PaymentStatementRepository paymentStatementRepository) {
         this.weightTicketRepository = weightTicketRepository;
@@ -69,6 +74,7 @@ public class PaymentService {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.transporterRateRepository = transporterRateRepository;
         this.driverRateRepository = driverRateRepository;
+        this.driverPaymentStatementRepository = driverPaymentStatementRepository;
         this.fuelConfigRepository = fuelConfigRepository;
         this.paymentStatementRepository = paymentStatementRepository;
     }
@@ -133,16 +139,18 @@ public class PaymentService {
 
         // Regroupement par camion (vehicule)
         Map<String, DriverPayoutLineDto> byVehicle = new LinkedHashMap<>();
+        Map<String, Double> distanceCache = new HashMap<>();
+        Map<String, Double> consoCache = new HashMap<>();
 
         for (WeightTicket t : tickets) {
             String vehicle = t.getVehicle() != null ? t.getVehicle() : "(inconnu)";
             double tonnes = t.getNetWeight() / 1000.0;
 
             double litres = 0, fuelAmount = 0;
-            Optional<Project> project = (t.getProjectId() != null) ? projectRepository.findById(t.getProjectId()) : Optional.empty();
-            Optional<Truck> truck = truckRepository.findByVehicle(vehicle);
-            double distanceKm = project.map(Project::getDistanceKm).orElse(0.0);
-            double conso = truck.map(Truck::getFuelConsumptionLPerKm).orElse(0.0);
+            double distanceKm = t.getProjectId() != null
+                    ? distanceCache.computeIfAbsent(t.getProjectId(), pid -> projectRepository.findById(pid).map(Project::getDistanceKm).orElse(0.0))
+                    : 0.0;
+            double conso = consoCache.computeIfAbsent(vehicle, v -> truckRepository.findByVehicle(v).map(Truck::getFuelConsumptionLPerKm).orElse(0.0));
             if (distanceKm > 0 && conso > 0) {
                 litres = distanceKm * roundTripFactor * conso;
                 fuelAmount = litres * fuelPrice;
@@ -234,6 +242,8 @@ public class PaymentService {
 
         List<PaymentLine> lines = new ArrayList<>();
         double totalTransport = 0, totalFuelLitres = 0, totalFuel = 0, totalTonnage = 0;
+        Map<String, Double> distanceCache = new HashMap<>();
+        Map<String, Double> consoCache = new HashMap<>();
 
         for (WeightTicket t : tickets) {
             double tonnes = t.getNetWeight() / 1000.0;
@@ -241,12 +251,14 @@ public class PaymentService {
             double transportRate = resolveTransporterRate(request.getTransporterId(), t.getProjectId(), t.getProduct(), t.getDate());
             double transportAmount = round(tonnes * transportRate);
 
-            double distanceKm = 0, conso = 0, litres = 0, fuelAmount = 0;
+            double litres = 0, fuelAmount = 0;
             String note = null;
-            Optional<Project> project = (t.getProjectId() != null) ? projectRepository.findById(t.getProjectId()) : Optional.empty();
-            Optional<Truck> truck = (t.getVehicle() != null) ? truckRepository.findByVehicle(t.getVehicle()) : Optional.empty();
-            if (project.isPresent()) distanceKm = project.get().getDistanceKm();
-            if (truck.isPresent()) conso = truck.get().getFuelConsumptionLPerKm();
+            double distanceKm = t.getProjectId() != null
+                    ? distanceCache.computeIfAbsent(t.getProjectId(), pid -> projectRepository.findById(pid).map(Project::getDistanceKm).orElse(0.0))
+                    : 0.0;
+            double conso = t.getVehicle() != null
+                    ? consoCache.computeIfAbsent(t.getVehicle(), v -> truckRepository.findByVehicle(v).map(Truck::getFuelConsumptionLPerKm).orElse(0.0))
+                    : 0.0;
             if (distanceKm > 0 && conso > 0) {
                 litres = distanceKm * roundTripFactor * conso;
                 fuelAmount = round(litres * fuelPrice);
@@ -339,6 +351,93 @@ public class PaymentService {
     private PaymentStatement findOrThrow(String id) {
         return paymentStatementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Releve de paiement introuvable avec l'ID : " + id));
+    }
+
+    // ----------------- Persistance paiement chauffeur -----------------
+
+    public DriverPayoutResponse generateDriverPayment(String transporterId, String purchaseOrderId) {
+        DriverPayoutResponse r = getDriverPayouts(transporterId, purchaseOrderId);
+        DriverPaymentStatement st = DriverPaymentStatement.builder()
+                .transporterId(r.getTransporterId())
+                .transporterName(r.getTransporterName())
+                .purchaseOrderId(r.getPurchaseOrderId())
+                .purchaseOrderNumber(r.getPurchaseOrderNumber())
+                .lines(r.getLines() == null ? new ArrayList<>()
+                        : r.getLines().stream().map(this::toLineModel).collect(Collectors.toList()))
+                .totalTonnes(r.getTotalTonnes())
+                .totalFuelLitres(r.getTotalFuelLitres())
+                .totalFuelAmount(r.getTotalFuelAmount())
+                .totalGross(r.getTotalGross())
+                .totalNet(r.getTotalNet())
+                .status(DriverPaymentStatement.PaymentStatus.DRAFT)
+                .generatedAt(LocalDateTime.now())
+                .build();
+        return toDriverResponse(driverPaymentStatementRepository.save(st));
+    }
+
+    public List<DriverPayoutResponse> listDriverPayments(String transporterId, DriverPaymentStatement.PaymentStatus status) {
+        List<DriverPaymentStatement> result;
+        if (status != null) {
+            result = driverPaymentStatementRepository.findByStatus(status);
+        } else if (transporterId != null && !transporterId.isBlank()) {
+            result = driverPaymentStatementRepository.findByTransporterId(transporterId);
+        } else {
+            result = driverPaymentStatementRepository.findAll();
+        }
+        return result.stream().map(this::toDriverResponse).collect(Collectors.toList());
+    }
+
+    public DriverPayoutResponse getDriverPaymentById(String id) {
+        return toDriverResponse(findDriverOrThrow(id));
+    }
+
+    public DriverPayoutResponse validateDriverPayment(String id) {
+        DriverPaymentStatement s = findDriverOrThrow(id);
+        s.setStatus(DriverPaymentStatement.PaymentStatus.VALIDATED);
+        return toDriverResponse(driverPaymentStatementRepository.save(s));
+    }
+
+    public DriverPayoutResponse payDriverPayment(String id) {
+        DriverPaymentStatement s = findDriverOrThrow(id);
+        s.setStatus(DriverPaymentStatement.PaymentStatus.PAID);
+        return toDriverResponse(driverPaymentStatementRepository.save(s));
+    }
+
+    private DriverPaymentStatement findDriverOrThrow(String id) {
+        return driverPaymentStatementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Paiement chauffeur introuvable avec l'ID : " + id));
+    }
+
+    private DriverPayoutLine toLineModel(DriverPayoutLineDto d) {
+        return DriverPayoutLine.builder()
+                .vehicle(d.getVehicle()).driver(d.getDriver()).tripCount(d.getTripCount())
+                .totalTonnes(d.getTotalTonnes()).pricePerTonne(d.getPricePerTonne())
+                .grossAmount(d.getGrossAmount()).fuelLitres(d.getFuelLitres())
+                .fuelAmount(d.getFuelAmount()).netAmount(d.getNetAmount()).build();
+    }
+
+    private DriverPayoutResponse toDriverResponse(DriverPaymentStatement s) {
+        List<DriverPayoutLineDto> lines = s.getLines() == null ? List.of() : s.getLines().stream()
+                .map(l -> DriverPayoutLineDto.builder()
+                        .vehicle(l.getVehicle()).driver(l.getDriver()).tripCount(l.getTripCount())
+                        .totalTonnes(l.getTotalTonnes()).pricePerTonne(l.getPricePerTonne())
+                        .grossAmount(l.getGrossAmount()).fuelLitres(l.getFuelLitres())
+                        .fuelAmount(l.getFuelAmount()).netAmount(l.getNetAmount()).build())
+                .collect(Collectors.toList());
+        return DriverPayoutResponse.builder()
+                .id(s.getId())
+                .status(s.getStatus() != null ? s.getStatus().name() : null)
+                .transporterId(s.getTransporterId())
+                .transporterName(s.getTransporterName())
+                .purchaseOrderId(s.getPurchaseOrderId())
+                .purchaseOrderNumber(s.getPurchaseOrderNumber())
+                .lines(lines)
+                .totalTonnes(s.getTotalTonnes())
+                .totalFuelLitres(s.getTotalFuelLitres())
+                .totalFuelAmount(s.getTotalFuelAmount())
+                .totalGross(s.getTotalGross())
+                .totalNet(s.getTotalNet())
+                .build();
     }
 
     // ----------------- Mapping -----------------

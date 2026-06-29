@@ -1,6 +1,5 @@
 package com.gayale.transport.dto.payment;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +17,7 @@ public class DriverRateRequest {
 
     private String transporterId;
 
-    @NotNull(message = "La date de debut de validite est obligatoire")
+    // Optionnelle : si absente, le tarif est valable depuis toujours
     private LocalDate effectiveFrom;
 
     private LocalDate effectiveTo;
