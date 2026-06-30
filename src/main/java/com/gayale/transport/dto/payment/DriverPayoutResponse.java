@@ -12,6 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DriverPayoutResponse {
+    private String id;
+    private String status;
     private String transporterId;
     private String transporterName;
     private String purchaseOrderId;

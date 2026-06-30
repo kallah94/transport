@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -117,11 +118,12 @@ public class TruckService implements ITruckService {
         double rtf = (fc != null && fc.getRoundTripFactor() > 0) ? fc.getRoundTripFactor() : 2.0;
         double conso = truck.getFuelConsumptionLPerKm();
         double grossReceive = 0, fuelLitres = 0, fuelAmount = 0;
+        Map<String, Double> distCache = new HashMap<>();
         for (WeightTicket t : tickets) {
             double tonnes = t.getNetWeight() / 1000.0;
             grossReceive += tonnes * resolveDriverRate(transporterId, t.getDate());
             double dist = (t.getProjectId() != null)
-                    ? projectRepository.findById(t.getProjectId()).map(Project::getDistanceKm).orElse(0.0) : 0.0;
+                    ? distCache.computeIfAbsent(t.getProjectId(), pid -> projectRepository.findById(pid).map(Project::getDistanceKm).orElse(0.0)) : 0.0;
             if (dist > 0 && conso > 0) {
                 double litres = dist * rtf * conso;
                 fuelLitres += litres;
