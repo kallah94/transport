@@ -5,6 +5,9 @@ Ce document décrit comment faire évoluer l'API `com.gayale.transport` pour ser
 déploiement, et comment isoler les données dans le modèle partagé.
 
 Décisions actées :
+- **Deux canaux de livraison** :
+  1. **Electron desktop** avec le **JAR `transport-api` embarqué** (+ MongoDB local) → modèle **dédié, mono‑tenant, hors‑ligne**.
+  2. **Déploiement web** → modèle **partagé multi‑tenant** par sous‑domaine.
 - Instance partagée → **isolation totale multi‑tenant** (chaque transporteur ne voit que ses données).
 - Identification du client → **par sous‑domaine** (`clientA.app.com`).
 - Branding → **fichier de configuration monté par déploiement** (pas de rebuild).
@@ -20,6 +23,7 @@ Décisions actées :
 | Base Mongo | 1 base par client | 1 base, données taguées `tenantId` |
 | Isolation des données | par l'infrastructure (bases séparées) | par le code (`tenantId` + filtrage) |
 | Tenants en base | 1 (semé au démarrage) | N (auto‑inscription) |
+| Canal | **Electron + JAR embarqué** | **Web** |
 | Branding | fichier de config du déploiement | par tenant (fichier seedé → champ `Tenant`) |
 
 Le pilote est une variable d'environnement :
@@ -171,48 +175,56 @@ rôle plateforme `SUPER_ADMIN` (hors tenant) pour l'exploitation.
 
 ## 4. Recettes de déploiement
 
-### 4.1 Dédié (un client = une stack)
+### 4.0 Electron — JAR `transport-api` embarqué (canal dédié)
 
-```yaml
-# docker-compose.clientA.yml
-services:
-  api:
-    image: gayale/transport-api:1.x
-    environment:
-      APP_MODE: dedicated
-      TENANT_KEY: clientA
-      MONGO_URI: mongodb://mongo:27017/clientA
-      JWT_SECRET: ${JWT_SECRET}
-      CORS_ALLOWED_ORIGINS: https://clientA.example.com
-  mongo:
-    image: mongo:7
-    volumes: [ "clientA_data:/data/db" ]
-volumes: { clientA_data: {} }
+Le desktop est déjà câblé pour ça : `electron-builder` copie le JAR via
+`build.extraResources` (`from: server`, filtres `*.jar`, `*.yml`, `*.properties`),
+et le front lit l'URL du serveur local par IPC
+(`window.electron.server.getStatus()` dans `api.service.ts`) — donc **pas d'`apiUrl`
+à coder en dur**.
+
+Le **process principal Electron** lance le JAR en mode dédié, sur un port libre :
+
+```js
+// electron main : démarrage du backend embarqué
+const jar = path.join(process.resourcesPath, 'server', 'transport-api.jar');
+serverProcess = spawn('java', [
+  '-jar', jar,
+  '--server.port=0',                       // port libre, lu ensuite dans les logs
+  '--spring.profiles.active=dedicated',
+  '--app.mode=dedicated',
+  `--app.tenant.default-key=${CLIENT_KEY}`,// ex: clientA
+  `--spring.data.mongodb.uri=${MONGO_URI}` // mongodb://localhost:27017/clientA
+]);
+// puis exposer l'URL résolue au renderer via getStatus()
 ```
 
-### 4.2 Partagé (une stack, N tenants par sous‑domaine)
+Points d'attention propres au desktop :
+- **MongoDB local** : soit MongoDB Community installé sur le poste (déjà fait en dev),
+  soit `mongod` bundlé dans `extraResources` et démarré par Electron. À trancher
+  (cf. §7) selon que le client a droit ou non d'installer Mongo.
+- **JRE** : embarquer un JRE (jlink) dans `extraResources` pour ne pas dépendre d'un
+  `java` système.
+- **Mono‑tenant** : `app.mode=dedicated` ⇒ le filtrage multi‑tenant est un no‑op
+  (`tenantId = CLIENT_KEY` constant). Le même code que le web, sans isolation à risque.
+- **Hors‑ligne** : tout est local (front + JAR + Mongo) ; aucune dépendance réseau.
 
-```yaml
-services:
-  api:
-    image: gayale/transport-api:1.x
-    environment:
-      APP_MODE: shared
-      MONGO_URI: ${MONGO_URI}            # une base, données taguées tenantId
-      JWT_SECRET: ${JWT_SECRET}
-      CORS_ALLOWED_ORIGINS: https://*.app.com
+### 4.1 Web partagé (une instance, N tenants par sous‑domaine)
+
+L'API se déploie comme aujourd'hui (PaaS type Render, ou un simple `java -jar` sur un
+serveur), pilotée **uniquement par variables d'environnement** :
+
+```
+APP_MODE=shared
+MONGO_URI=...                       # une base, données taguées tenantId
+JWT_SECRET=...
+CORS_ALLOWED_ORIGINS=https://*.app.com
 ```
 
-Reverse‑proxy (nginx) — transmettre le `Host` pour que le filtre lise le sous‑domaine :
-
-```nginx
-server {
-  server_name ~^(?<sub>.+)\.app\.com$;
-  location /api/ { proxy_pass http://api:8080; proxy_set_header Host $host; }
-}
-```
-
-Certificat **wildcard** `*.app.com` (Phase « sous‑domaine »).
+Exigences côté hébergement :
+- **Sous‑domaine wildcard** `*.app.com` pointant vers l'instance (certificat TLS wildcard).
+- L'en‑tête **`Host`** doit arriver intact jusqu'à l'API : le `TenantFilter` en déduit le
+  tenant. Sur un PaaS c'est le cas par défaut ; derrière un proxy, penser à transmettre `Host`.
 
 ---
 
@@ -240,8 +252,4 @@ Certificat **wildcard** `*.app.com` (Phase « sous‑domaine »).
 
 ---
 
-## 7. Hors périmètre / à décider plus tard
-
-- Domaines personnalisés par client (en plus des sous‑domaines).
-- Branding éditable en ligne (champ `Tenant.theme` vs fichier) si on quitte le « fichier par déploiement ».
-- Quotas/facturation par tenant, sauvegardes par tenant.
+## 7. Hors périmètre / à décider plus t

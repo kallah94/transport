@@ -6,7 +6,9 @@ import java.util.List;
 import com.gayale.transport.security.JwtAuthenticationFilter;
 import com.gayale.transport.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -32,6 +34,9 @@ public class SecurityConfig {
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
 
+    @Value("${app.mode:dedicated}")
+    private String appMode;
+
     @Autowired
     public SecurityConfig(JwtTokenProvider tokenProvider, UserDetailsService userDetailsService) {
         this.tokenProvider = tokenProvider;
@@ -47,9 +52,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/branding").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, userDetailsService),
+                .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, userDetailsService,
+                                "shared".equalsIgnoreCase(appMode)),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -58,7 +65,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:3000", "https://truck-transportation-management.onrender.com" ));
+        // allowedOriginPatterns (et non setAllowedOrigins) pour rester compatible avec
+        // allowCredentials(true) tout en autorisant l'app Electron desktop : chargée en
+        // file://, elle envoie "Origin: null". On garde le web (localhost + Render).
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:4200",
+                "http://localhost:3000",
+                "https://truck-transportation-management.onrender.com",
+                "null" // Electron desktop (renderer file://)
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "content-type", "x-auth-token", "*"));
         configuration.setExposedHeaders(List.of("Authorization"));

@@ -53,14 +53,29 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        return Jwts.builder()
+        io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .claim("roles", authorities)
                 .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(key)
-                .compact();
+                .setExpiration(expiryDate);
 
+        // Multi-tenant : embarque le tenant courant (resolu par le TenantFilter) dans le jeton.
+        String tenantId = com.gayale.transport.tenant.TenantContext.getTenantId();
+        if (tenantId != null && !tenantId.isBlank()) {
+            builder.claim("tenantId", tenantId);
+        }
+
+        return builder.signWith(key).compact();
+    }
+
+    public String getTenantIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Object tenantId = claims.get("tenantId");
+        return tenantId != null ? tenantId.toString() : null;
     }
 
     public String getUsernameFromToken(String token) {

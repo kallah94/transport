@@ -4,6 +4,8 @@ import com.gayale.transport.dto.ProjectDto;
 import com.gayale.transport.dto.ProjectWithPurchaseOrders;
 import com.gayale.transport.dto.PurchaseOrderDto;
 import com.gayale.transport.exception.ResourceNotFoundException;
+import com.gayale.transport.model.Notification.NotificationLevel;
+import com.gayale.transport.model.Notification.NotificationType;
 import com.gayale.transport.model.Project;
 import com.gayale.transport.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +19,14 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final PurchaseOrderService purchaseOrderService;
+    private final NotificationService notificationService;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository, PurchaseOrderService purchaseOrderService) {
+    public ProjectService(ProjectRepository projectRepository, PurchaseOrderService purchaseOrderService,
+                          NotificationService notificationService) {
         this.projectRepository = projectRepository;
         this.purchaseOrderService = purchaseOrderService;
+        this.notificationService = notificationService;
     }
 
     public List<ProjectDto> getAllProjects() {
@@ -89,6 +94,9 @@ public class ProjectService {
         project.setTotalDeliveredTonnage(0.0); // Initialize with zero
 
         Project savedProject = projectRepository.save(project);
+        notificationService.notify(NotificationType.PROJECT_CREATED, NotificationLevel.INFO,
+                "Nouveau projet", savedProject.getName(),
+                "/projects", savedProject.getId());
         return mapProjectToDto(savedProject);
     }
 

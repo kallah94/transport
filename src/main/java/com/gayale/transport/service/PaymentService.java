@@ -10,6 +10,8 @@ import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.model.DriverPaymentStatement;
 import com.gayale.transport.model.DriverPayoutLine;
 import com.gayale.transport.model.DriverRate;
+import com.gayale.transport.model.Notification.NotificationLevel;
+import com.gayale.transport.model.Notification.NotificationType;
 import com.gayale.transport.model.FuelConfig;
 import com.gayale.transport.model.PaymentLine;
 import com.gayale.transport.model.PaymentStatement;
@@ -55,6 +57,7 @@ public class PaymentService {
     private final DriverPaymentStatementRepository driverPaymentStatementRepository;
     private final FuelConfigRepository fuelConfigRepository;
     private final PaymentStatementRepository paymentStatementRepository;
+    private final NotificationService notificationService;
 
     @Autowired
     public PaymentService(WeightTicketRepository weightTicketRepository,
@@ -66,7 +69,8 @@ public class PaymentService {
                           DriverRateRepository driverRateRepository,
                           DriverPaymentStatementRepository driverPaymentStatementRepository,
                           FuelConfigRepository fuelConfigRepository,
-                          PaymentStatementRepository paymentStatementRepository) {
+                          PaymentStatementRepository paymentStatementRepository,
+                          NotificationService notificationService) {
         this.weightTicketRepository = weightTicketRepository;
         this.transporterRepository = transporterRepository;
         this.truckRepository = truckRepository;
@@ -77,6 +81,7 @@ public class PaymentService {
         this.driverPaymentStatementRepository = driverPaymentStatementRepository;
         this.fuelConfigRepository = fuelConfigRepository;
         this.paymentStatementRepository = paymentStatementRepository;
+        this.notificationService = notificationService;
     }
 
     public PaymentStatementResponse preview(PaymentGenerationRequest request) {
@@ -84,7 +89,13 @@ public class PaymentService {
     }
 
     public PaymentStatementResponse generate(PaymentGenerationRequest request) {
-        return toResponse(paymentStatementRepository.save(compute(request)));
+        PaymentStatement saved = paymentStatementRepository.save(compute(request));
+        notificationService.notify(NotificationType.PAYMENT_GENERATED, NotificationLevel.ALERT,
+                "Paiement transporteur à valider",
+                "Facture " + saved.getTransporterName() + " — BC " + saved.getPurchaseOrderNumber()
+                        + " : " + saved.getInvoiceTotal(),
+                "/payments", saved.getId());
+        return toResponse(saved);
     }
 
     public List<PaymentStatementResponse> list(String transporterId, PaymentStatement.PaymentStatus status) {
@@ -372,7 +383,13 @@ public class PaymentService {
                 .status(DriverPaymentStatement.PaymentStatus.DRAFT)
                 .generatedAt(LocalDateTime.now())
                 .build();
-        return toDriverResponse(driverPaymentStatementRepository.save(st));
+        DriverPaymentStatement savedSt = driverPaymentStatementRepository.save(st);
+        notificationService.notify(NotificationType.PAYMENT_GENERATED, NotificationLevel.ALERT,
+                "Paiement chauffeur à valider",
+                "Chauffeurs " + savedSt.getTransporterName() + " — BC " + savedSt.getPurchaseOrderNumber()
+                        + " : " + savedSt.getTotalNet(),
+                "/payments", savedSt.getId());
+        return toDriverResponse(savedSt);
     }
 
     public List<DriverPayoutResponse> listDriverPayments(String transporterId, DriverPaymentStatement.PaymentStatus status) {

@@ -6,8 +6,9 @@ spring:
     name: gayale-transport
   data:
     mongodb:
-      #uri: mongodb+srv://fmoussa:kallah@cluster0.yy3ajm3.mongodb.net/gayale_transport_dev?retryWrites=true&w=majority
-      uri: mongodb://localhost:27017/gayal_transport_dev_local?retryWrites=true&w=majority
+      # URI surchargeable par la variable d'environnement MONGO_URI (aucun identifiant commité).
+      # Repli = MongoDB local de dev uniquement (pas de secret).
+      uri: ${MONGO_URI:mongodb://localhost:27017/gayal_transport_dev_local?retryWrites=true&w=majority}
       auto-index-creation: true
 
 server:
@@ -21,12 +22,22 @@ logging:
     org.springframework.security: WARN
 
 app:
+  # Mode multi-tenant : "dedicated" (1 client, tenant constant) ou "shared" (N clients par sous-domaine)
+  mode: ${APP_MODE:dedicated}
+  tenant:
+    default-key: ${TENANT_KEY:default}
   qrcode:
     base-url: ${QRCODE_BASE_URL:http://localhost:4200/tickets/}
   security:
     jwt:
       expiration: 86400000
       refresh-expiration: 604800000 # 7 days in milliseconds
-      # Le secret doit être fourni via la variable d'environnement JWT_SECRET.
-      # La valeur de repli ci-dessous ne sert QU'AU développement local.
-      secret: ${JWT_SECRET:VtH7!aKz9#NnXq3$Pf@wJd5^Rb2ZsLmY%UgE0Cq*XiTp+AdGhKrMb4YuJeVo6WxB}
+      # Le secret DOIT être fourni via la variable d'environnement JWT_SECRET en prod.
+      # La valeur de repli ci-dessous est un placeholder de DEV, public et non sensible :
+      # ne l'utilisez JAMAIS en production (définissez JWT_SECRET).
+      secret: ${JWT_SECRET:dev-only-insecure-placeholder-change-via-JWT_SECRET-env-0123456789abcdef}
+    # Cookie httpOnly portant le jeton d'acces.
+    # Local/Electron : secure=false, same-site=Lax. Prod web (HTTPS, domaines distincts) : secure=true, same-site=None.
+    cookie:
+      secure: ${COOKIE_SECURE:false}
+      same-site: ${COOKIE_SAME_SITE:Lax}
