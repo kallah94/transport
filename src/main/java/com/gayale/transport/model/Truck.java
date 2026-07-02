@@ -9,10 +9,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 
 
 @Document(collection = "trucks")
+@CompoundIndex(name = "uk_tenant_vehicle", def = "{'tenantId': 1, 'vehicle': 1}", unique = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,7 +23,6 @@ public class Truck extends AuditableEntity {
     @Id
     private String id;
 
-    @Indexed(unique = true)
     private String vehicle;
 
     @DBRef

@@ -6,12 +6,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
 @Document(collection = "users")
+@CompoundIndexes({
+        @CompoundIndex(name = "uk_tenant_username", def = "{'tenantId': 1, 'username': 1}", unique = true),
+        @CompoundIndex(name = "uk_tenant_email", def = "{'tenantId': 1, 'email': 1}", unique = true)
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,14 +26,12 @@ public class User extends AuditableEntity {
     @Id
     private String id;
 
-    @Indexed(unique = true)
     private String username;
 
     private String password;
 
     private String fullName;
 
-    @Indexed(unique = true)
     private String email;
 
     private UserRole role;
@@ -36,6 +39,6 @@ public class User extends AuditableEntity {
     private LocalDateTime lastLogin;
 
     public enum UserRole {
-        ADMIN, AGENT, GUEST
+        SUPER_ADMIN, ADMIN, AGENT, GUEST
     }
 }

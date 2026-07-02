@@ -10,6 +10,8 @@ import com.gayale.transport.dto.transporterEntreprise.TransporterEnterpriseRespo
 import com.gayale.transport.dto.transporterEntreprise.TransporterStatistics;
 import com.gayale.transport.exception.DuplicateResourceException;
 import com.gayale.transport.exception.ResourceNotFoundException;
+import com.gayale.transport.model.Notification.NotificationLevel;
+import com.gayale.transport.model.Notification.NotificationType;
 import com.gayale.transport.model.TransporterEnterprise;
 import com.gayale.transport.model.User;
 import com.gayale.transport.repository.TransporterEnterpriseRepository;
@@ -34,6 +36,7 @@ public class TransporterEnterpriseService {
     private final UserRepository userRepository;
     private final TruckRepository truckRepository;
     private final ModelMapper modelMapper;
+    private final NotificationService notificationService;
 
     public TransporterEnterpriseResponse createTransporter(TransporterEnterpriseRequest request) {
         if (transporterEnterpriseRepository.existsByNameIgnoreCase(request.getName())) {
@@ -52,6 +55,9 @@ public class TransporterEnterpriseService {
         transporter.setActive(request.getActive() != null ? request.getActive() : true);
 
         TransporterEnterprise savedTransporter = transporterEnterpriseRepository.save(transporter);
+        notificationService.notify(NotificationType.TRANSPORTER_CREATED, NotificationLevel.INFO,
+                "Nouveau transporteur", savedTransporter.getName(),
+                "/transporters", savedTransporter.getId());
         return convertToResponse(savedTransporter);
     }
 

@@ -6,10 +6,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "purchase_orders")
+@CompoundIndex(name = "uk_tenant_order", def = "{'tenantId': 1, 'orderNumber': 1}", unique = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +20,6 @@ public class PurchaseOrder extends AuditableEntity {
     @Id
     private String id;
 
-    @Indexed(unique = true)
     private String orderNumber;
 
     private String supplier;

@@ -9,9 +9,14 @@ import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.exception.UnauthorizedException;
 import com.gayale.transport.model.RefreshToken;
 import com.gayale.transport.model.User;
+import com.gayale.transport.dto.auth.SignupRequest;
+import com.gayale.transport.dto.auth.SignupResponse;
+import com.gayale.transport.model.Tenant;
 import com.gayale.transport.repository.RefreshTokenRepository;
+import com.gayale.transport.repository.TenantRepository;
 import com.gayale.transport.repository.UserRepository;
 import com.gayale.transport.security.JwtTokenProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +39,8 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final TenantRepository tenantRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${app.security.jwt.expiration}")
     private long jwtExpirationMs;
@@ -45,11 +52,50 @@ public class AuthService {
     public AuthService(AuthenticationManager authenticationManager,
                        JwtTokenProvider tokenProvider,
                        UserRepository userRepository,
-                       RefreshTokenRepository refreshTokenRepository) {
+                       RefreshTokenRepository refreshTokenRepository,
+                       TenantRepository tenantRepository,
+                       PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.tenantRepository = tenantRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    /**
+     * Auto-inscription d'un transporteur (mode shared) : cree le tenant + son administrateur.
+     * Le tenantId de l'admin est pose explicitement (le tenant n'existe pas encore au moment
+     * ou le contexte serait resolu).
+     */
+    public SignupResponse signup(SignupRequest request) {
+        String key = request.getTenantKey().toLowerCase();
+        if (tenantRepository.existsByKey(key)) {
+            throw new IllegalArgumentException("Cette cle (sous-domaine) est deja utilisee : " + key);
+        }
+
+        Tenant tenant = tenantRepository.save(Tenant.builder()
+                .key(key)
+                .title(request.getTitle())
+                .active(true)
+                .theme(new Tenant.Theme("#3f51b5", "#1a237e", "#ff4081", "#121212", "#1e1e1e"))
+                .build());
+
+        User admin = new User();
+        admin.setTenantId(tenant.getId());
+        admin.setUsername(request.getAdminUsername());
+        admin.setPassword(passwordEncoder.encode(request.getAdminPassword()));
+        admin.setEmail(request.getAdminEmail());
+        admin.setFullName(request.getAdminFullName());
+        admin.setRole(User.UserRole.ADMIN);
+        userRepository.save(admin);
+
+        return SignupResponse.builder()
+                .tenantKey(key)
+                .tenantId(tenant.getId())
+                .adminUsername(admin.getUsername())
+                .message("Compte cree. Connectez-vous sur le sous-domaine '" + key + "'.")
+                .build();
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
