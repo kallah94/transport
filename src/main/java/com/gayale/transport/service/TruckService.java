@@ -26,6 +26,7 @@ import com.gayale.transport.repository.WeightTicketRepository;
 import com.gayale.transport.exception.DuplicateResourceException;
 import com.gayale.transport.exception.ResourceNotFoundException;
 import com.gayale.transport.iservices.ITruckService;
+import com.gayale.transport.license.LicenseGuard;
 import com.gayale.transport.model.Truck;
 import com.gayale.transport.model.TransporterEnterprise;
 import com.gayale.transport.repository.TruckRepository;
@@ -43,6 +44,7 @@ public class TruckService implements ITruckService {
     private final DriverRateRepository driverRateRepository;
     private final FuelConfigRepository fuelConfigRepository;
     private final ModelMapper modelMapper;
+    private final LicenseGuard licenseGuard;
 
     @Autowired
     public TruckService(TruckRepository truckRepository,
@@ -51,7 +53,8 @@ public class TruckService implements ITruckService {
                         ProjectRepository projectRepository,
                         DriverRateRepository driverRateRepository,
                         FuelConfigRepository fuelConfigRepository,
-                        ModelMapper modelMapper) {
+                        ModelMapper modelMapper,
+                        LicenseGuard licenseGuard) {
         this.truckRepository = truckRepository;
         this.transporterEnterpriseRepository = transporterEnterpriseRepository;
         this.weightTicketRepository = weightTicketRepository;
@@ -59,6 +62,7 @@ public class TruckService implements ITruckService {
         this.driverRateRepository = driverRateRepository;
         this.fuelConfigRepository = fuelConfigRepository;
         this.modelMapper = modelMapper;
+        this.licenseGuard = licenseGuard;
     }
 
     public TruckStatistics getTruckStatistics(String id) {
@@ -224,6 +228,9 @@ public class TruckService implements ITruckService {
 
     @Override
     public TruckResponse createTruck(TruckRequest truckRequest) {
+        // Quota contractuel : refuse l'ajout au-dela du nombre de camions vendu (HTTP 402).
+        licenseGuard.checkTruckQuota();
+
         if (truckRepository.existsByVehicle(truckRequest.getVehicle())) {
             System.err.println("ERROR: Vehicle already exists: " + truckRequest.getVehicle());
             throw new DuplicateResourceException("Truck with this vehicle number " + truckRequest.getVehicle() + " already exists");

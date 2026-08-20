@@ -34,6 +34,10 @@ public class Notification extends AuditableEntity {
     /** Identifiant de l'entité liée (BC, transporteur, projet, paiement…). */
     private String refId;
 
+    /** Cible camion (rôle DRIVER) : si renseigné, la notification est destinée à ce véhicule.
+     *  Null = notification administration. */
+    private String vehicle;
+
     @Builder.Default
     private boolean read = false;
 
@@ -42,7 +46,8 @@ public class Notification extends AuditableEntity {
         PURCHASE_ORDER_COMPLETED,
         TRANSPORTER_CREATED,
         PROJECT_CREATED,
-        PAYMENT_GENERATED
+        PAYMENT_GENERATED,
+        TRIP_RECORDED
     }
 
     public enum NotificationLevel {

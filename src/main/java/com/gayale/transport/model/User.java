@@ -36,9 +36,12 @@ public class User extends AuditableEntity {
 
     private UserRole role;
 
+    /** Camion rattaché pour un compte chauffeur (rôle DRIVER) : correspond à Truck.vehicle. */
+    private String vehicle;
+
     private LocalDateTime lastLogin;
 
     public enum UserRole {
-        SUPER_ADMIN, ADMIN, AGENT, GUEST
+        SUPER_ADMIN, ADMIN, AGENT, GUEST, DRIVER
     }
 }

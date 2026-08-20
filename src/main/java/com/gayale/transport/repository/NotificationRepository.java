@@ -7,9 +7,17 @@ import java.util.List;
 
 public interface NotificationRepository extends MongoRepository<Notification, String> {
 
-    List<Notification> findTop50ByOrderByCreatedAtDesc();
+    // Notifications administration (non ciblées camion : vehicle == null).
+    List<Notification> findTop50ByVehicleIsNullOrderByCreatedAtDesc();
 
-    List<Notification> findTop50ByReadFalseOrderByCreatedAtDesc();
+    List<Notification> findTop50ByVehicleIsNullAndReadFalseOrderByCreatedAtDesc();
 
-    long countByReadFalse();
+    long countByVehicleIsNullAndReadFalse();
+
+    // Notifications destinées à un camion (app chauffeur).
+    List<Notification> findTop50ByVehicleOrderByCreatedAtDesc(String vehicle);
+
+    List<Notification> findTop50ByVehicleAndReadFalseOrderByCreatedAtDesc(String vehicle);
+
+    long countByVehicleAndReadFalse(String vehicle);
 }

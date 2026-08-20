@@ -53,7 +53,10 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branding").permitAll()
-                        .anyRequest().authenticated()
+                        // L'app mobile chauffeur n'accède QU'à /api/driver ; les comptes DRIVER
+                        // sont exclus du reste (l'app admin est réservée aux autres rôles).
+                        .requestMatchers("/api/driver/**").hasRole("DRIVER")
+                        .anyRequest().hasAnyRole("SUPER_ADMIN", "ADMIN", "AGENT", "GUEST")
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(tokenProvider, userDetailsService,
                                 "shared".equalsIgnoreCase(appMode)),

@@ -14,6 +14,9 @@ public interface WeightTicketRepository extends MongoRepository<WeightTicket, St
     List<WeightTicket> findByProjectId(String projectId);
     List<WeightTicket> findByPurchaseOrderId(String purchaseOrderId);
     List<WeightTicket> findByDateBetween(LocalDate startDate, LocalDate endDate);
+
+    /** Volumetrie mensuelle : sert au controle du quota de tickets de la licence. */
+    long countByDateBetween(LocalDate startDate, LocalDate endDate);
     List<WeightTicket> findByDate(LocalDate date);
     List<WeightTicket> findByVehicle(String vehicle);
     List<WeightTicket> findByDriver(String driver);

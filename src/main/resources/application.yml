@@ -28,6 +28,24 @@ app:
     default-key: ${TENANT_KEY:default}
   qrcode:
     base-url: ${QRCODE_BASE_URL:http://localhost:4200/tickets/}
+  license:
+    # Cle PUBLIQUE Ed25519 de l'editeur (X.509, base64). La cle PRIVEE correspondante ne doit
+    # JAMAIS figurer ici ni dans le depot : elle reste sur le poste de l'editeur.
+    # La valeur de repli ci-dessous est une cle de DEVELOPPEMENT, publique et non sensible :
+    # en production, definissez LICENSE_PUBLIC_KEY (cf. .docs/licence-doc.rmd).
+    public-key: ${LICENSE_PUBLIC_KEY:MCowBQYDK2VwAyEAnGevFEB34QfeSlesdtk9bFlGIvng7iPbHWfgohX4Lug=}
+    # Mettre a false UNIQUEMENT en developpement : coupe tout controle de licence.
+    enforce: ${LICENSE_ENFORCE:true}
+    # Jours d'utilisation toleres apres expiration.
+    grace-days: ${LICENSE_GRACE_DAYS:14}
+    # Essai automatique a la premiere installation (0 = desactive).
+    trial-days: ${LICENSE_TRIAL_DAYS:30}
+    # Liaison a l'empreinte machine. false sur une instance web partagee ou en conteneur.
+    bind-machine: ${LICENSE_BIND_MACHINE:true}
+    # Duree du cache de resolution (secondes).
+    cache-seconds: ${LICENSE_CACHE_SECONDS:60}
+    # Identifiants de licence revoques, separes par des virgules.
+    revoked: ${LICENSE_REVOKED:}
   security:
     jwt:
       expiration: 86400000

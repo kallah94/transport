@@ -1,5 +1,7 @@
 package com.gayale.transport.exception;
 
+import com.gayale.transport.license.LicenseKeyException;
+import com.gayale.transport.license.LicenseRequiredException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -85,6 +87,33 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Refus commercial : licence absente/expiree, plan insuffisant ou quota atteint.
+     * 402 Payment Required est intercepte par le frontend pour rediriger vers la page Licence.
+     */
+    @ExceptionHandler(LicenseRequiredException.class)
+    public ResponseEntity<Map<String, Object>> handleLicenseRequired(LicenseRequiredException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", "LICENSE_REQUIRED");
+        error.put("licenseStatus", ex.getStatus() != null ? ex.getStatus().name() : null);
+        error.put("feature", ex.getFeature() != null ? ex.getFeature().name() : null);
+        error.put("quota", ex.getQuota());
+        error.put("message", ex.getMessage());
+        error.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(error);
+    }
+
+    /** Cle de licence illisible, mal signee ou destinee a une autre machine (saisie manuelle). */
+    @ExceptionHandler(LicenseKeyException.class)
+    public ResponseEntity<Map<String, Object>> handleLicenseKey(LicenseKeyException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", "INVALID_LICENSE_KEY");
+        error.put("licenseStatus", ex.getStatus() != null ? ex.getStatus().name() : null);
+        error.put("message", ex.getMessage());
+        error.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
     @ExceptionHandler(MissingRateException.class)

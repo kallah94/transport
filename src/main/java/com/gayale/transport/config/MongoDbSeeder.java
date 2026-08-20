@@ -28,6 +28,7 @@ public class MongoDbSeeder implements CommandLineRunner {
         seedUser("admin", "admin@gayaletransport.com", "Administrateur", "admin", User.UserRole.ADMIN);
         seedUser("agent", "agent@gayaletransport.com", "Agent de saisie", "agent", User.UserRole.AGENT);
         seedUser("guest", "guest@gayaletransport.com", "Invité", "guest", User.UserRole.GUEST);
+        seedUser("guest", "guest@gayaletransport.com", "Invité", "guest", User.UserRole.GUEST);
     }
 
     private void seedUser(String username, String email, String fullName, String rawPassword, User.UserRole role) {

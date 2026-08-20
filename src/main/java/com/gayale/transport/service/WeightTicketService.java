@@ -29,6 +29,8 @@ public class WeightTicketService {
     private final ProjectService projectService;
     private final PurchaseOrderService purchaseOrderService;
     private final QRCodeService qrCodeService;
+    private final NotificationService notificationService;
+    private final com.gayale.transport.license.LicenseGuard licenseGuard;
 
     @Autowired
     public WeightTicketService(WeightTicketRepository weightTicketRepository,
@@ -36,13 +38,17 @@ public class WeightTicketService {
                                PurchaseOrderRepository purchaseOrderRepository,
                                ProjectService projectService,
                                PurchaseOrderService purchaseOrderService,
-                               QRCodeService qrCodeService) {
+                               QRCodeService qrCodeService,
+                               NotificationService notificationService,
+                               com.gayale.transport.license.LicenseGuard licenseGuard) {
         this.weightTicketRepository = weightTicketRepository;
         this.projectRepository = projectRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.projectService = projectService;
         this.purchaseOrderService = purchaseOrderService;
         this.qrCodeService = qrCodeService;
+        this.notificationService = notificationService;
+        this.licenseGuard = licenseGuard;
     }
 
     public List<WeightTicketDto> getAllWeightTickets() {
@@ -104,6 +110,9 @@ public class WeightTicketService {
 
     @Transactional
     public WeightTicketDto createWeightTicket(WeightTicketDto weightTicketDto) {
+        // Quota contractuel : plafond de tickets sur le mois du ticket (HTTP 402).
+        licenseGuard.checkTicketQuota(weightTicketDto.getDate());
+
         // Verify project exists
         if (!projectRepository.existsById(weightTicketDto.getProjectId())) {
             throw new ResourceNotFoundException("Project not found with id: " + weightTicketDto.getProjectId());
@@ -164,6 +173,17 @@ public class WeightTicketService {
 
         // Update the associated purchase order and project with the new tonnage
         updateDeliveryQuantities(savedTicket.getPurchaseOrderId(), savedTicket.getProjectId(), savedTicket.getNetWeight());
+
+        // Notifie le chauffeur du camion concerné (app mobile).
+        if (savedTicket.getVehicle() != null && !savedTicket.getVehicle().isBlank()) {
+            double tonnes = Math.round(savedTicket.getNetWeight() / 1000.0 * 100.0) / 100.0;
+            notificationService.notifyVehicle(
+                    com.gayale.transport.model.Notification.NotificationType.TRIP_RECORDED,
+                    com.gayale.transport.model.Notification.NotificationLevel.INFO,
+                    "Nouveau trajet enregistré",
+                    tonnes + " t · ticket " + savedTicket.getTicketNumber(),
+                    "/tabs/trips", savedTicket.getId(), savedTicket.getVehicle());
+        }
 
         return mapWeightTicketToDto(savedTicket);
     }

@@ -34,6 +34,9 @@ public class UserDto {
 
     private User.UserRole role;
 
+    /** Camion rattaché (rôle DRIVER) — Truck.vehicle. */
+    private String vehicle;
+
     private LocalDateTime lastLogin;
 
     private LocalDateTime createdAt;
